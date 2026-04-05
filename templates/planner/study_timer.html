@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block title %}Study Timer — KAAF{% endblock %}
+{% block page_title %}Study Timer{% endblock %}
+{% block page_subtitle %}Pomodoro focus sessions{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto space-y-5" x-data="timerApp()">
+
+  <!-- Timer Card -->
+  <div class="card text-center">
+    <!-- Mode Selector -->
+    <div class="flex justify-center gap-2 mb-6">
+      <button @click="setDuration(25)" :class="duration === 25 ? 'text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'" :style="duration === 25 ? 'background:var(--brand)' : ''" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all">25 min</button>
+      <button @click="setDuration(45)" :class="duration === 45 ? 'text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'" :style="duration === 45 ? 'background:var(--brand)' : ''" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all">45 min</button>
+      <button @click="setDuration(60)" :class="duration === 60 ? 'text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'" :style="duration === 60 ? 'background:var(--brand)' : ''" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all">60 min</button>
+    </div>
+
+    <!-- Subject Input -->
+    <input x-model="subject" type="text" placeholder="What are you studying?" class="form-input mb-6 text-center" :disabled="isRunning">
+
+    <!-- Timer Display -->
+    <div class="relative w-52 h-52 mx-auto mb-6">
+      <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#e5e7eb" stroke-width="6" class="dark:stroke-gray-700"/>
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#4f46e5" stroke-width="6"
+                stroke-dasharray="276.5"
+                :stroke-dashoffset="276.5 * (1 - progress)"
+                stroke-linecap="round"
+                class="transition-all duration-1000"/>
+      </svg>
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <span class="text-4xl font-bold text-gray-900 dark:text-white font-mono tracking-tight" x-text="timeDisplay"></span>
+        <span class="text-xs text-gray-400 mt-1 font-medium" x-text="isRunning ? '🎯 Focus!' : (isPaused ? '⏸ Paused' : '▶ Ready')"></span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex justify-center gap-3">
+      <button @click="toggle()" class="px-8 py-3 rounded-xl font-semibold text-sm transition-all shadow-sm"
+              :class="isRunning ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'text-white'"
+              :style="isRunning ? '' : 'background:var(--brand)'"
+              x-text="isRunning ? 'Pause' : (isPaused ? 'Resume' : 'Start')">
+      </button>
+      <button @click="reset()" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm transition-all">Reset</button>
+    </div>
+
+    <!-- Streak & Stats -->
+    <div class="flex justify-center gap-8 mt-6 pt-6 border-t border-gray-100 dark:border-gray-700/60">
+      <div class="text-center">
+        <p class="text-xl font-bold text-amber-500">🔥 {{ streak }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Day Streak</p>
+      </div>
+      <div class="text-center">
+        <p class="text-xl font-bold" style="color:var(--brand)">{{ total_study_minutes }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Total Minutes</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Sessions -->
+  {% if recent_sessions %}
+  <div class="card">
+    <h3 class="font-semibold mb-4 text-gray-900 dark:text-white">Recent Sessions</h3>
+    <div class="space-y-1">
+      {% for session in recent_sessions %}
+      <div class="flex items-center justify-between py-2.5 border-b border-gray-50 dark:border-gray-700/60 last:border-0">
+        <div>
+          <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ session.subject|default:"General Study" }}</p>
+          <p class="text-xs text-gray-500 mt-0.5">{{ session.started_at|date:"M d, H:i" }}</p>
+        </div>
+        <span class="badge" style="background:var(--brand-lt);color:var(--brand)">{{ session.duration_minutes }} min</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<div id="complete-toast" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 bg-emerald-500 text-white px-4 py-3 rounded-xl shadow-lg font-semibold text-sm hidden z-50 animate-bounce-in">
+  🎉 Session complete! Points earned!
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+function timerApp() {
+  return {
+    duration: 25,
+    timeLeft: 25 * 60,
+    isRunning: false,
+    isPaused: false,
+    subject: '',
+    sessionId: null,
+    interval: null,
+
+    get timeDisplay() {
+      const m = Math.floor(this.timeLeft / 60).toString().padStart(2, '0');
+      const s = (this.timeLeft % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    },
+
+    get progress() {
+      return 1 - (this.timeLeft / (this.duration * 60));
+    },
+
+    setDuration(mins) {
+      if (this.isRunning) return;
+      this.duration = mins;
+      this.timeLeft = mins * 60;
+      this.isPaused = false;
+    },
+
+    toggle() {
+      if (this.isRunning) {
+        clearInterval(this.interval);
+        this.isRunning = false;
+        this.isPaused = true;
+      } else {
+        if (!this.sessionId) this.startSession();
+        this.isRunning = true;
+        this.isPaused = false;
+        this.interval = setInterval(() => {
+          if (this.timeLeft > 0) {
+            this.timeLeft--;
+          } else {
+            this.complete();
+          }
+        }, 1000);
+      }
+    },
+
+    reset() {
+      clearInterval(this.interval);
+      this.isRunning = false;
+      this.isPaused = false;
+      this.timeLeft = this.duration * 60;
+      this.sessionId = null;
+    },
+
+    startSession() {
+      fetch('/planner/timer/start/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        body: JSON.stringify({ subject: this.subject, duration: this.duration })
+      })
+      .then(r => r.json())
+      .then(data => { this.sessionId = data.session_id; });
+    },
+
+    complete() {
+      clearInterval(this.interval);
+      this.isRunning = false;
+      this.timeLeft = 0;
+      if (this.sessionId) {
+        fetch(`/planner/timer/${this.sessionId}/finish/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': CSRF }
+        })
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('complete-toast').classList.remove('hidden');
+          setTimeout(() => document.getElementById('complete-toast').classList.add('hidden'), 4000);
+          this.reset();
+        });
+      }
+    }
+  };
+}
+</script>
+{% endblock %}

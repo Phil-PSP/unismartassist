@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Smart Planner — KAAF{% endblock %}
+{% block page_title %}Smart Planner{% endblock %}
+{% block page_subtitle %}Manage your tasks and deadlines{% endblock %}
+
+{% block content %}
+<div class="space-y-5" x-data="{}">
+
+  <!-- Stats Row -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="card text-center hover:-translate-y-0.5 transition-transform duration-200">
+      <p class="text-2xl font-bold" style="color:var(--brand)">{{ pending_tasks }}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Pending</p>
+    </div>
+    <div class="card text-center hover:-translate-y-0.5 transition-transform duration-200">
+      <p class="text-2xl font-bold text-red-500">{{ overdue_tasks|length }}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Overdue</p>
+    </div>
+    <div class="card text-center hover:-translate-y-0.5 transition-transform duration-200">
+      <p class="text-2xl font-bold text-amber-500">{{ total_points }}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">⭐ Points</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <h2 class="font-semibold text-gray-900 dark:text-white">My Tasks</h2>
+    <a href="{% url 'add_task' %}" class="btn btn-primary text-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+      Add Task
+    </a>
+  </div>
+
+  <!-- Overdue Alert -->
+  {% if overdue_tasks %}
+  <div class="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-xl p-4">
+    <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <p class="text-red-700 dark:text-red-300 font-medium text-sm">You have {{ overdue_tasks|length }} overdue task{{ overdue_tasks|length|pluralize }}!</p>
+  </div>
+  {% endif %}
+
+  <!-- Pending Tasks -->
+  <div class="card">
+    <h3 class="font-semibold mb-4 text-gray-900 dark:text-white">Pending Tasks</h3>
+    {% if pending_tasks %}
+    <div class="space-y-2.5" id="tasks-list">
+      {% for task in pending_tasks %}
+      <div class="flex items-center gap-3 p-3.5 border border-gray-100 dark:border-gray-700/60 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group" id="task-{{ task.id }}">
+        <button onclick="completeTask({{ task.id }})" class="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex-shrink-0 transition-all duration-150"></button>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-sm text-gray-900 dark:text-white {% if task.is_overdue %}text-red-600 dark:text-red-400{% endif %}">
+            {{ task.title }}
+            {% if task.is_overdue %}<span class="text-xs text-red-500 ml-1.5 font-normal">OVERDUE</span>{% endif %}
+          </p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ task.get_task_type_display }} · Due: {{ task.due_date|default:"No deadline" }}</p>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0
+          {% if task.priority == 'high' %}bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400
+          {% elif task.priority == 'medium' %}bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400
+          {% else %}bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400{% endif %}">
+          {{ task.get_priority_display }}
+        </span>
+        <button onclick="deleteTask({{ task.id }})" class="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-10">
+      <p class="text-4xl mb-3">🎉</p>
+      <p class="text-gray-500 dark:text-gray-400 text-sm">No pending tasks! Add some to stay organized.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Completed Tasks -->
+  {% if completed_tasks %}
+  <div class="card">
+    <h3 class="font-semibold mb-4 text-gray-400 dark:text-gray-500">Completed Tasks</h3>
+    <div class="space-y-2">
+      {% for task in completed_tasks %}
+      <div class="flex items-center gap-3 p-3 opacity-50">
+        <div class="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <p class="text-sm line-through text-gray-500 flex-1">{{ task.title }}</p>
+        <span class="text-xs text-gray-400">{{ task.completed_at|date:"M d" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Points Toast -->
+<div id="points-toast" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 bg-amber-400 text-amber-900 px-4 py-3 rounded-xl shadow-lg font-semibold text-sm hidden z-50 animate-bounce-in">
+  ⭐ +<span id="points-amount">0</span> points earned!
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+function completeTask(taskId) {
+  fetch(`/planner/${taskId}/complete/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF }
+  })
+  .then(r => r.json())
+  .then(data => {
+    const el = document.getElementById(`task-${taskId}`);
+    if (el) el.remove();
+    showPointsToast(data.points_earned);
+  });
+}
+
+function deleteTask(taskId) {
+  if (!confirm('Delete this task?')) return;
+  fetch(`/planner/${taskId}/delete/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF }
+  })
+  .then(() => {
+    const el = document.getElementById(`task-${taskId}`);
+    if (el) el.remove();
+  });
+}
+
+function showPointsToast(points) {
+  const toast = document.getElementById('points-toast');
+  document.getElementById('points-amount').textContent = points;
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+function plannerApp() { return {}; }
+</script>
+{% endblock %}

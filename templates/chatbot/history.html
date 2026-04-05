@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Chat History — KAAF{% endblock %}
+{% block page_title %}Chat History{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-3">
+  {% for session in sessions %}
+  <a href="{% url 'chatbot' %}?session={{ session.id }}" class="block card card-hover">
+    <div class="flex justify-between items-start gap-3">
+      <div>
+        <p class="font-semibold text-sm capitalize" style="color:var(--text)">{{ session.mode }} Mode</p>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">{{ session.messages.count }} messages</p>
+      </div>
+      <p class="text-xs flex-shrink-0" style="color:var(--muted)">{{ session.last_activity|timesince }} ago</p>
+    </div>
+    {% with session.messages.last as last_msg %}
+    {% if last_msg %}
+    <p class="text-xs mt-2 truncate" style="color:var(--muted)">{{ last_msg.message|truncatechars:80 }}</p>
+    {% endif %}
+    {% endwith %}
+  </a>
+  {% empty %}
+  <div class="card text-center py-16">
+    <p class="text-5xl mb-4">💬</p>
+    <p class="text-gray-500 dark:text-gray-400">No chat history yet. Start a conversation!</p>
+    <a href="{% url 'chatbot' %}" class="mt-4 inline-block btn btn-primary text-sm">Start Chatting</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

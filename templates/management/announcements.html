@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Announcements — Admin{% endblock %}
+{% block page_title %}Announcements{% endblock %}
+{% block page_subtitle %}Send announcements to students and staff{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- Compose form -->
+  <div class="card lg:col-span-1">
+    <h3 class="font-semibold mb-4" style="color:var(--text)">New Announcement</h3>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Title</label>
+        <input name="title" type="text" class="form-input" placeholder="Announcement title" required>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Target Audience</label>
+        <select name="target" class="form-input">
+          {% for val, label in target_choices %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Message</label>
+        <textarea name="content" rows="5" class="form-input resize-none" placeholder="Write your announcement..." required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">📢 Send Announcement</button>
+    </form>
+  </div>
+
+  <!-- Announcements list -->
+  <div class="card lg:col-span-2">
+    <h3 class="font-semibold mb-4" style="color:var(--text)">All Announcements</h3>
+    <div class="space-y-3">
+      {% for ann in announcements %}
+      <div class="p-4 rounded-xl" style="border:1px solid var(--border)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <p class="font-semibold text-sm" style="color:var(--text)">{{ ann.title }}</p>
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-medium
+                {% if ann.is_active %}bg-emerald-50 text-emerald-600{% else %}bg-gray-100 text-gray-400{% endif %}">
+                {% if ann.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full" style="background:var(--brand-lt);color:var(--brand)">
+                {{ ann.get_target_display }}
+              </span>
+            </div>
+            <p class="text-xs mt-1 line-clamp-2" style="color:var(--muted)">{{ ann.content }}</p>
+            <p class="text-[11px] mt-1.5" style="color:var(--muted)">
+              By {{ ann.created_by.get_full_name|default:"Admin" }} · {{ ann.created_at|date:"M d, Y H:i" }}
+            </p>
+          </div>
+          <div class="flex gap-1.5 flex-shrink-0">
+            <button onclick="toggleAnn({{ ann.id }}, this)"
+                    class="text-xs px-2 py-1 rounded-lg transition-colors"
+                    style="border:1px solid var(--border);color:var(--muted)"
+                    title="Toggle active">
+              {% if ann.is_active %}Deactivate{% else %}Activate{% endif %}
+            </button>
+            <button onclick="deleteAnn({{ ann.id }}, this)"
+                    class="text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-sm text-center py-8" style="color:var(--muted)">No announcements yet. Create one!</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+function deleteAnn(id, btn) {
+  if (!confirm('Delete this announcement?')) return;
+  fetch(`/manage/announcements/${id}/delete/`, { method:'POST', headers:{'X-CSRFToken':CSRF} })
+    .then(r=>r.json()).then(()=>btn.closest('.p-4').remove());
+}
+function toggleAnn(id, btn) {
+  fetch(`/manage/announcements/${id}/toggle/`, { method:'POST', headers:{'X-CSRFToken':CSRF} })
+    .then(r=>r.json()).then(d=>{
+      btn.textContent = d.is_active ? 'Deactivate' : 'Activate';
+      const badge = btn.closest('.p-4').querySelector('.rounded-full');
+      if (badge) { badge.textContent = d.is_active ? 'Active' : 'Inactive'; }
+    });
+}
+</script>
+{% endblock %}

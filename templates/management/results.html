@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Upload Results — Admin{% endblock %}
+{% block page_title %}Results Management{% endblock %}
+{% block page_subtitle %}Upload individual or bulk student results{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- Manual upload form -->
+  <div class="space-y-4">
+    <div class="card">
+      <h3 class="font-semibold mb-4" style="color:var(--text)">Upload Single Result</h3>
+      <form method="post" action="{% url 'admin_upload_result' %}" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Student</label>
+          <select name="student_id" class="form-input" required>
+            <option value="">— Select Student —</option>
+            {% for sp in students %}
+            <option value="{{ sp.id }}">{{ sp.user.user_id }} — {{ sp.user.get_full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Course</label>
+          <select name="course_id" class="form-input" required>
+            <option value="">— Select Course —</option>
+            {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.code }} — {{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Score (0–100)</label>
+            <input name="score" type="number" min="0" max="100" step="0.01" class="form-input" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Semester</label>
+            <select name="semester" class="form-input">
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Academic Year</label>
+          <input name="academic_year" type="text" class="form-input" value="2024/2025" placeholder="e.g. 2024/2025">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Remarks (optional)</label>
+          <input name="remarks" type="text" class="form-input" placeholder="e.g. Supplementary">
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Upload Result</button>
+      </form>
+    </div>
+
+    <!-- Bulk CSV upload -->
+    <div class="card">
+      <h3 class="font-semibold mb-2" style="color:var(--text)">Bulk Upload (CSV)</h3>
+      <p class="text-xs mb-3" style="color:var(--muted)">CSV columns: <code class="px-1 py-0.5 rounded" style="background:var(--bg)">student_id, course_code, score, academic_year, semester</code></p>
+      <form method="post" action="{% url 'admin_bulk_upload' %}" enctype="multipart/form-data" class="space-y-3">
+        {% csrf_token %}
+        <input name="csv_file" type="file" accept=".csv" class="form-input text-sm" required>
+        <button type="submit" class="btn btn-secondary w-full">📤 Upload CSV</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Recent results table -->
+  <div class="card lg:col-span-2" style="padding:0;overflow:hidden">
+    <div class="px-5 py-4" style="border-bottom:1px solid var(--border)">
+      <h3 class="font-semibold" style="color:var(--text)">Recent Uploads</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead style="background:var(--bg)">
+          <tr>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Student</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Course</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Score</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Grade</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Year/Sem</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Uploaded</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y" style="border-color:var(--border)">
+          {% for r in recent_results %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
+            <td class="px-4 py-2.5 text-xs font-mono" style="color:var(--text)">{{ r.student.user.user_id }}</td>
+            <td class="px-4 py-2.5 text-xs" style="color:var(--text)">{{ r.course.code }}</td>
+            <td class="px-4 py-2.5 text-xs font-semibold" style="color:var(--text)">{{ r.score }}</td>
+            <td class="px-4 py-2.5">
+              <span class="text-xs px-2 py-0.5 rounded-full font-bold
+                {% if r.grade in 'A+,A' %}bg-emerald-50 text-emerald-700
+                {% elif r.grade in 'B+,B' %}bg-blue-50 text-blue-700
+                {% elif r.grade in 'C+,C' %}bg-amber-50 text-amber-700
+                {% elif r.grade == 'F' %}bg-red-50 text-red-700
+                {% else %}bg-gray-50 text-gray-600{% endif %}">
+                {{ r.grade }}
+              </span>
+            </td>
+            <td class="px-4 py-2.5 text-xs" style="color:var(--muted)">{{ r.academic_year }} S{{ r.semester }}</td>
+            <td class="px-4 py-2.5 text-xs" style="color:var(--muted)">{{ r.uploaded_at|date:"M d, H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="px-4 py-8 text-center text-sm" style="color:var(--muted)">No results uploaded yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

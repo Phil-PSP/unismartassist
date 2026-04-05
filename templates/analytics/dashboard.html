@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — KAAF{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}{{ user.get_full_name }} · {{ user.role|capfirst }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in">
+
+  <!-- Welcome Banner -->
+  <div class="grad-mesh rounded-2xl p-6 text-white relative overflow-hidden">
+    <div class="absolute -top-8 -right-8 w-40 h-40 bg-white/5 rounded-full"></div>
+    <div class="absolute bottom-0 right-16 w-24 h-24 bg-white/5 rounded-full"></div>
+    <div class="relative z-10 flex items-center justify-between">
+      <div>
+        <p class="text-blue-200 text-sm font-medium mb-1">Good day 👋</p>
+        <h2 class="text-2xl font-bold">{{ user.first_name }}!</h2>
+        <p class="text-blue-200 mt-1 text-sm">
+          {% if user.is_student %}Ready to learn something new today?
+          {% elif user.is_staff_member %}Have a productive teaching day!
+          {% else %}System overview at a glance.{% endif %}
+        </p>
+      </div>
+      <div class="hidden sm:flex gap-5 text-center">
+        <div>
+          <p class="text-2xl font-bold">{{ user.points }}</p>
+          <p class="text-blue-200 text-xs mt-0.5">Points</p>
+        </div>
+        <div class="w-px bg-white/20"></div>
+        <div>
+          <p class="text-2xl font-bold">{{ user.study_streak }}</p>
+          <p class="text-blue-200 text-xs mt-0.5">Day Streak 🔥</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if user.is_student %}
+  <!-- Student Stats -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card text-center group hover:-translate-y-0.5 transition-transform duration-200">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2" style="background:var(--brand-lt)">
+        <svg class="w-5 h-5" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <p class="text-3xl font-bold" style="color:var(--brand)">{{ gpa|default:"0.00" }}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Cumulative GPA</p>
+    </div>
+    <div class="card text-center hover:-translate-y-0.5 transition-transform duration-200">
+      <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center mx-auto mb-2">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </div>
+      <p class="text-3xl font-bold text-emerald-600">{{ today_classes|length }}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Classes Today</p>
+    </div>
+    <div class="card text-center hover:-translate-y-0.5 transition-transform duration-200">
+      <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center mx-auto mb-2">
+        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      </div>
+      <p class="text-3xl font-bold text-amber-600">{{ pending_tasks|default:0 }}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pending Tasks</p>
+    </div>
+    <div class="card text-center hover:-translate-y-0.5 transition-transform duration-200">
+      <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center mx-auto mb-2">
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-3xl font-bold text-red-500">{{ overdue_count|default:0 }}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Overdue</p>
+    </div>
+  </div>
+
+  <!-- Today's Schedule + Quick Actions -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold flex items-center gap-2" style="color:var(--text)">
+          <svg class="w-4 h-4" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Today's Classes
+        </h3>
+        <a href="{% url 'timetable' %}" class="text-xs font-medium hover:underline" style="color:var(--brand)">View all →</a>
+      </div>
+      {% if today_classes %}
+        <div class="space-y-2.5">
+          {% for cls in today_classes %}
+          <div class="flex items-center gap-3 p-3 rounded-xl" style="background:var(--brand-lt);border:1px solid rgba(79,70,229,.15)">
+            <div class="text-center min-w-[52px] rounded-lg py-1.5 shadow-sm" style="background:var(--surface)">
+              <p class="text-xs font-bold" style="color:var(--brand)">{{ cls.start_time|time:"H:i" }}</p>
+              <p class="text-[10px] text-gray-400">{{ cls.end_time|time:"H:i" }}</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ cls.course.name }}</p>
+              <p class="text-xs text-gray-500">{{ cls.venue }} · {{ cls.course.code }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-8">
+          <p class="text-3xl mb-2">😊</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">No classes today. Enjoy your free time!</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <a href="{% url 'chatbot' %}" class="flex flex-col items-center gap-2 p-4 rounded-xl transition-colors group" style="background:var(--brand-lt)">
+          <span class="text-2xl group-hover:scale-110 transition-transform">🤖</span>
+          <span class="text-xs font-semibold" style="color:var(--text)">Ask AI</span>
+        </a>
+        <a href="{% url 'results' %}" class="flex flex-col items-center gap-2 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors group">
+          <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
+          <span class="text-xs font-semibold" style="color:var(--text)">My Results</span>
+        </a>
+        <a href="{% url 'add_task' %}" class="flex flex-col items-center gap-2 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors group">
+          <span class="text-2xl group-hover:scale-110 transition-transform">✅</span>
+          <span class="text-xs font-semibold" style="color:var(--text)">Add Task</span>
+        </a>
+        <a href="{% url 'study_timer' %}" class="flex flex-col items-center gap-2 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors group">
+          <span class="text-2xl group-hover:scale-110 transition-transform">⏱️</span>
+          <span class="text-xs font-semibold" style="color:var(--text)">Study Timer</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% elif user.is_admin %}
+
+  <!-- Admin KPI Cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card hover:-translate-y-0.5 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:#eff6ff">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </div>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">+{{ new_users_week }} this week</span>
+      </div>
+      <p class="text-3xl font-bold text-blue-600">{{ total_students }}</p>
+      <p class="text-sm mt-1" style="color:var(--muted)">Active Students</p>
+    </div>
+
+    <div class="card hover:-translate-y-0.5 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">{{ total_users }} total</span>
+      </div>
+      <p class="text-3xl font-bold text-emerald-600">{{ total_staff }}</p>
+      <p class="text-sm mt-1" style="color:var(--muted)">Staff Members</p>
+    </div>
+
+    <div class="card hover:-translate-y-0.5 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-50">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        </div>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-600">{{ chats_today }} today</span>
+      </div>
+      <p class="text-3xl font-bold text-purple-600">{{ total_chats }}</p>
+      <p class="text-sm mt-1" style="color:var(--muted)">Total AI Messages</p>
+    </div>
+
+    <div class="card hover:-translate-y-0.5 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-50">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        </div>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">{{ good_feedback }}👍 {{ bad_feedback }}👎</span>
+      </div>
+      <p class="text-3xl font-bold text-amber-600">{{ satisfaction }}%</p>
+      <p class="text-sm mt-1" style="color:var(--muted)">AI Satisfaction</p>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Chat usage chart -->
+    <div class="card lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold" style="color:var(--text)">Chat Activity — Last 7 Days</h3>
+        <span class="text-xs px-2 py-1 rounded-full" style="background:var(--brand-lt);color:var(--brand)">Messages / day</span>
+      </div>
+      <canvas id="chatChart" height="90"></canvas>
+    </div>
+
+    <!-- User distribution donut -->
+    <div class="card">
+      <h3 class="font-semibold mb-4" style="color:var(--text)">User Distribution</h3>
+      <canvas id="roleChart" height="160"></canvas>
+      <div class="flex justify-center gap-4 mt-3 text-xs" style="color:var(--muted)">
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>Students</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Staff</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>Admins</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users table + Top chatters -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Recent users -->
+    <div class="card lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold" style="color:var(--text)">Recent Users</h3>
+        <a href="/admin/accounts/user/" class="text-xs font-medium hover:underline" style="color:var(--brand)">Manage all →</a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border)">
+              <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">User</th>
+              <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">ID</th>
+              <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Role</th>
+              <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Joined</th>
+              <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y" style="border-color:var(--border)">
+            {% for u in recent_users %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
+              <td class="py-2.5">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 grad-brand rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{{ u.first_name|first }}</div>
+                  <span class="font-medium truncate max-w-[120px]" style="color:var(--text)">{{ u.get_full_name }}</span>
+                </div>
+              </td>
+              <td class="py-2.5 text-xs" style="color:var(--muted)">{{ u.user_id }}</td>
+              <td class="py-2.5">
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium
+                  {% if u.role == 'student' %}bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400
+                  {% elif u.role == 'staff' %}bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400
+                  {% else %}bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400{% endif %}">
+                  {{ u.role|capfirst }}
+                </span>
+              </td>
+              <td class="py-2.5 text-xs" style="color:var(--muted)">{{ u.date_joined|date:"M d, Y" }}</td>
+              <td class="py-2.5">
+                <span class="w-2 h-2 rounded-full inline-block {% if u.is_active %}bg-emerald-500{% else %}bg-red-400{% endif %}"></span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Top chatters + Quick actions -->
+    <div class="space-y-4">
+      <div class="card">
+        <h3 class="font-semibold mb-3" style="color:var(--text)">Top AI Users</h3>
+        <div class="space-y-2.5">
+          {% for chatter in top_chatters %}
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 grad-brand rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              {{ chatter.session__user__first_name|first }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold truncate" style="color:var(--text)">{{ chatter.session__user__first_name }} {{ chatter.session__user__last_name }}</p>
+              <p class="text-[10px]" style="color:var(--muted)">{{ chatter.session__user__user_id }}</p>
+            </div>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full" style="background:var(--brand-lt);color:var(--brand)">{{ chatter.msg_count }}</span>
+          </div>
+          {% empty %}
+          <p class="text-xs" style="color:var(--muted)">No chat data yet</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Quick admin actions -->
+      <div class="card">
+        <h3 class="font-semibold mb-3" style="color:var(--text)">Quick Actions</h3>
+        <div class="space-y-2">
+          <a href="/admin/" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style="background:var(--bg);color:var(--text)" onmouseover="this.style.background='var(--brand-lt)'" onmouseout="this.style.background='var(--bg)'">
+            <svg class="w-4 h-4" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Django Admin Panel
+          </a>
+          <a href="/admin/accounts/user/add/" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style="background:var(--bg);color:var(--text)" onmouseover="this.style.background='var(--brand-lt)'" onmouseout="this.style.background='var(--bg)'">
+            <svg class="w-4 h-4" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            Add New User
+          </a>
+          <a href="{% url 'notifications' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style="background:var(--bg);color:var(--text)" onmouseover="this.style.background='var(--brand-lt)'" onmouseout="this.style.background='var(--bg)'">
+            <svg class="w-4 h-4" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            Notifications <span class="ml-auto text-xs px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">{{ total_unread_notifs }}</span>
+          </a>
+          <a href="{% url 'chatbot' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style="background:var(--bg);color:var(--text)" onmouseover="this.style.background='var(--brand-lt)'" onmouseout="this.style.background='var(--bg)'">
+            <svg class="w-4 h-4" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            Open AI Chatbot
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="card">
+    <h3 class="font-semibold mb-4" style="color:var(--text)">Recent Activity Log</h3>
+    <div class="space-y-0 divide-y" style="border-color:var(--border)">
+      {% for log in recent_activity %}
+      <div class="flex items-center gap-3 py-2.5 text-sm">
+        <span class="text-xs w-32 flex-shrink-0" style="color:var(--muted)">{{ log.timestamp|date:"M d, H:i" }}</span>
+        <div class="w-6 h-6 grad-brand rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">{{ log.user.first_name|first }}</div>
+        <span class="text-xs font-semibold flex-shrink-0" style="color:var(--brand)">{{ log.user.user_id }}</span>
+        <span class="truncate text-xs" style="color:var(--muted)">{{ log.description }}</span>
+        <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full flex-shrink-0
+          {% if log.action == 'login' %}bg-emerald-50 text-emerald-600
+          {% elif log.action == 'logout' %}bg-gray-100 text-gray-500
+          {% else %}bg-blue-50 text-blue-600{% endif %}">
+          {{ log.action }}
+        </span>
+      </div>
+      {% empty %}
+      <p class="text-sm py-4 text-center" style="color:var(--muted)">No activity yet</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Upcoming Events -->
+  {% if upcoming_events %}
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <span>📅</span> Upcoming Events
+      </h3>
+      <a href="{% url 'notifications' %}" class="text-xs font-medium hover:underline" style="color:var(--brand)">View all →</a>
+    </div>
+    <div class="space-y-2.5">
+      {% for event in upcoming_events %}
+      <div class="flex items-center gap-4 p-3 border border-gray-100 dark:border-gray-700/60 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+        <div class="text-center rounded-xl p-2 min-w-[52px]" style="background:var(--brand-lt)">
+          <p class="text-[10px] font-bold uppercase" style="color:var(--brand)">{{ event.date|date:"M" }}</p>
+          <p class="text-xl font-bold leading-tight" style="color:var(--brand)">{{ event.date|date:"d" }}</p>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ event.title }}</p>
+          <p class="text-xs text-gray-500">{{ event.location|default:"TBA" }} · {{ event.get_event_type_display }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if user.is_admin %}
+<script>
+const chatLabels = {{ chat_labels|safe }};
+const chatData = {{ chat_data|safe }};
+const roleData = [{{ role_counts.students }}, {{ role_counts.staff }}, {{ role_counts.admins }}];
+
+// Chat activity line chart
+new Chart(document.getElementById('chatChart'), {
+  type: 'line',
+  data: {
+    labels: chatLabels,
+    datasets: [{
+      label: 'Messages',
+      data: chatData,
+      borderColor: '#4f46e5',
+      backgroundColor: 'rgba(79,70,229,0.08)',
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: '#4f46e5',
+      pointRadius: 4,
+      pointHoverRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { precision: 0 } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// User distribution donut
+new Chart(document.getElementById('roleChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Students', 'Staff', 'Admins'],
+    datasets: [{
+      data: roleData,
+      backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6'],
+      borderWidth: 0,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '70%',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}` } }
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

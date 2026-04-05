@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up — KAAF University{% endblock %}
+
+{% block auth_content %}
+<div class="min-h-screen flex" x-data="{showPass:false, showConfirm:false, intake:'september'}">
+
+  <!-- Left branding panel -->
+  <div class="hidden lg:flex lg:w-5/12 grad-brand flex-col justify-between p-12 relative overflow-hidden">
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full"></div>
+    <div class="absolute -bottom-32 -left-16 w-80 h-80 bg-white/5 rounded-full"></div>
+
+    <div class="relative z-10">
+      <div class="flex items-center gap-3 mb-12">
+        <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l9-5-9-5-9 5 9 5z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-white font-bold text-lg leading-tight">KAAF University</p>
+          <p class="text-blue-200 text-sm">Smart Academic Assistant</p>
+        </div>
+      </div>
+      <h2 class="text-3xl font-bold text-white leading-tight mb-3">Join KAAF University<br>Smart Platform</h2>
+      <p class="text-blue-200 leading-relaxed text-sm">Create your account and get instant access to AI-powered academic tools, GPA tracking, and more.</p>
+    </div>
+
+    <div class="relative z-10 space-y-2.5">
+      <div class="flex items-center gap-3 bg-white/10 backdrop-blur rounded-xl px-4 py-2.5">
+        <span>🤖</span><span class="text-white text-sm">AI chatbot available 24/7</span>
+      </div>
+      <div class="flex items-center gap-3 bg-white/10 backdrop-blur rounded-xl px-4 py-2.5">
+        <span>📊</span><span class="text-white text-sm">Real-time GPA tracking</span>
+      </div>
+      <div class="flex items-center gap-3 bg-white/10 backdrop-blur rounded-xl px-4 py-2.5">
+        <span>🎓</span><span class="text-white text-sm">Scholarship & career guidance</span>
+      </div>
+      <div class="flex items-center gap-3 bg-white/10 backdrop-blur rounded-xl px-4 py-2.5">
+        <span>🔥</span><span class="text-white text-sm">Gamified study streaks & points</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="flex-1 flex items-center justify-center p-6 overflow-y-auto" style="background:var(--bg)">
+    <div class="w-full max-w-lg py-8">
+
+      <!-- Mobile logo -->
+      <div class="lg:hidden text-center mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 grad-brand rounded-2xl shadow-lg mb-2">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l9-5-9-5-9 5 9 5z"/>
+          </svg>
+        </div>
+        <h1 class="text-xl font-bold" style="color:var(--text)">KAAF University</h1>
+      </div>
+
+      <div class="card p-7">
+        <div class="mb-5">
+          <h2 class="text-2xl font-bold" style="color:var(--text)">Create your account</h2>
+          <p class="text-sm mt-1" style="color:var(--muted)">Fill in your details to get started</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="mb-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-xl text-red-700 dark:text-red-400 text-sm">
+          <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div>{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>
+        </div>
+        {% endif %}
+
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+
+          <!-- Name -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold mb-1" style="color:var(--text)">First Name</label>
+              <input name="first_name" type="text" class="form-input" value="{{ form.first_name.value|default:'' }}" placeholder="Kwame" required>
+              {% if form.first_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Last Name</label>
+              <input name="last_name" type="text" class="form-input" value="{{ form.last_name.value|default:'' }}" placeholder="Asante" required>
+              {% if form.last_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.last_name.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+
+          <!-- Student ID + Email -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Student ID</label>
+              <input name="user_id" type="text" class="form-input font-mono text-sm" value="{{ form.user_id.value|default:'' }}" placeholder="STU/2024/010" required>
+              <p class="text-[10px] mt-0.5" style="color:var(--muted)">Provided by the university</p>
+              {% if form.user_id.errors %}<p class="text-red-500 text-xs mt-1">{{ form.user_id.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Email</label>
+              <input name="email" type="email" class="form-input" value="{{ form.email.value|default:'' }}" placeholder="you@email.com" required>
+              {% if form.email.errors %}<p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Phone <span class="font-normal" style="color:var(--muted)">(optional)</span></label>
+            <input name="phone" type="tel" class="form-input" value="{{ form.phone.value|default:'' }}" placeholder="+233 XX XXX XXXX">
+          </div>
+
+          <!-- Programme -->
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Programme of Study</label>
+            <select name="programme" class="form-input" required>
+              <option value="">— Select your programme —</option>
+              {% for faculty, progs in grouped_programmes.items %}
+              <optgroup label="{{ faculty }}">
+                {% for p in progs %}
+                <option value="{{ p.id }}" {% if request.POST.programme == p.id|stringformat:'s' %}selected{% endif %}>
+                  {{ p.name }} ({{ p.code }})
+                </option>
+                {% endfor %}
+              </optgroup>
+              {% empty %}
+              <!-- Fallback: hardcoded KAAF programmes if DB is empty -->
+              <optgroup label="Faculty of Health and Allied Sciences">
+                <option value="">BSc General Nursing</option>
+                <option value="">BSc Midwifery</option>
+                <option value="">BSc Public Health Nursing</option>
+                <option value="">Doctor of Medical Laboratory Science</option>
+                <option value="">Doctor of Pharmacy (PharmD)</option>
+              </optgroup>
+              <optgroup label="Faculty of Business Administration">
+                <option value="">BSc Accounting</option>
+                <option value="">BSc Marketing</option>
+              </optgroup>
+              <optgroup label="Faculty of Engineering">
+                <option value="">BSc Computer Science</option>
+                <option value="">BSc Information Technology</option>
+                <option value="">BSc Construction Technology</option>
+              </optgroup>
+              <optgroup label="Faculty of Law and Political Science">
+                <option value="">LLB Law</option>
+              </optgroup>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Intake type + Academic year -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Intake / Admission Type</label>
+              <select name="intake" class="form-input" x-model="intake" required>
+                {% for val, label in intake_choices %}
+                <option value="{{ val }}" {% if request.POST.intake == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Academic Year</label>
+              <select name="academic_year" class="form-input">
+                {% for yr in academic_years %}
+                <option value="{{ yr }}" {% if yr == current_year %}selected{% endif %}>{{ yr }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Level — auto-set but user can override -->
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Entry Level</label>
+            <select name="level" class="form-input">
+              <option value="100" :selected="intake !== 'direct_entry'">Level 100 (Year 1) — Default</option>
+              <option value="200" :selected="intake === 'direct_entry'">Level 200 (Direct Entry / Year 2)</option>
+              <option value="300">Level 300 (Year 3)</option>
+            </select>
+            <p class="text-[10px] mt-0.5" style="color:var(--muted)">Direct Entry students start at Level 200. Access Course students enter Level 200 after completion.</p>
+          </div>
+
+          <!-- Password -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Password</label>
+              <div class="relative">
+                <input name="password" :type="showPass?'text':'password'" class="form-input pr-9" placeholder="Min 6 chars" required>
+                <button type="button" @click="showPass=!showPass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
+                  <svg x-show="!showPass" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <svg x-show="showPass" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                </button>
+              </div>
+              {% if form.password.errors %}<p class="text-red-500 text-xs mt-1">{{ form.password.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Confirm Password</label>
+              <div class="relative">
+                <input name="confirm_password" :type="showConfirm?'text':'password'" class="form-input pr-9" placeholder="Repeat" required>
+                <button type="button" @click="showConfirm=!showConfirm" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
+                  <svg x-show="!showConfirm" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <svg x-show="showConfirm" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                </button>
+              </div>
+              {% if form.confirm_password.errors %}<p class="text-red-500 text-xs mt-1">{{ form.confirm_password.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full py-3 text-base mt-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            Create Account
+          </button>
+
+          <p class="text-center text-sm" style="color:var(--muted)">
+            Already have an account?
+            <a href="{% url 'login' %}" class="font-semibold hover:underline" style="color:var(--brand)">Sign in</a>
+          </p>
+        </form>
+      </div>
+
+      <p class="text-center text-xs mt-4" style="color:var(--muted)">© 2025 KAAF University · All rights reserved</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

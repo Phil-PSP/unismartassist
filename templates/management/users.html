@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}User Management — Admin{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block page_subtitle %}{{ total }} users found{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+  <!-- Filters + Add button -->
+  <div class="flex flex-wrap items-center gap-3">
+    <form method="get" class="flex gap-2 flex-1 min-w-0">
+      <input name="q" value="{{ search }}" type="text" class="form-input max-w-xs" placeholder="Search name or ID...">
+      <select name="role" class="form-input w-36">
+        <option value="">All Roles</option>
+        <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Students</option>
+        <option value="staff" {% if role_filter == 'staff' %}selected{% endif %}>Staff</option>
+        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admins</option>
+      </select>
+      <button type="submit" class="btn btn-secondary">Filter</button>
+    </form>
+    <a href="{% url 'admin_add_user' %}" class="btn btn-primary">+ Add User</a>
+  </div>
+
+  <!-- Table -->
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead style="background:var(--bg);border-bottom:1px solid var(--border)">
+          <tr>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">User</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">ID</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Role</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Email</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Joined</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Status</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y" style="border-color:var(--border)">
+          {% for u in users %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors" id="user-row-{{ u.id }}">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 grad-brand rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{{ u.first_name|first }}</div>
+                <span class="font-medium" style="color:var(--text)">{{ u.get_full_name }}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-xs font-mono" style="color:var(--muted)">{{ u.user_id }}</td>
+            <td class="px-4 py-3">
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium
+                {% if u.role == 'student' %}bg-blue-50 text-blue-600
+                {% elif u.role == 'staff' %}bg-emerald-50 text-emerald-600
+                {% else %}bg-purple-50 text-purple-600{% endif %}">
+                {{ u.role|capfirst }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ u.email }}</td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ u.date_joined|date:"M d, Y" }}</td>
+            <td class="px-4 py-3">
+              <span class="w-2 h-2 rounded-full inline-block {% if u.is_active %}bg-emerald-500{% else %}bg-red-400{% endif %}"></span>
+              <span class="text-xs ml-1" style="color:var(--muted)">{% if u.is_active %}Active{% else %}Inactive{% endif %}</span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-1.5">
+                <button onclick="toggleUser({{ u.id }}, this)"
+                        class="text-xs px-2 py-1 rounded-lg transition-colors"
+                        style="border:1px solid var(--border);color:var(--muted)">
+                  {% if u.is_active %}Deactivate{% else %}Activate{% endif %}
+                </button>
+                <button onclick="resetPwd({{ u.id }})"
+                        class="text-xs px-2 py-1 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
+                  Reset Pwd
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="px-4 py-8 text-center text-sm" style="color:var(--muted)">No users found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Reset password modal -->
+<div id="pwdModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,.5)">
+  <div class="card w-full max-w-sm mx-4">
+    <h3 class="font-semibold mb-4" style="color:var(--text)">Reset Password</h3>
+    <input id="newPwd" type="password" class="form-input mb-4" placeholder="New password (min 6 chars)">
+    <div class="flex gap-2">
+      <button onclick="submitReset()" class="btn btn-primary flex-1">Reset</button>
+      <button onclick="document.getElementById('pwdModal').classList.add('hidden')" class="btn btn-secondary flex-1">Cancel</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+let resetUserId = null;
+
+function toggleUser(id, btn) {
+  fetch(`/manage/users/${id}/toggle/`, { method:'POST', headers:{'X-CSRFToken':CSRF} })
+    .then(r=>r.json()).then(d=>{
+      btn.textContent = d.is_active ? 'Deactivate' : 'Activate';
+      const dot = document.querySelector(`#user-row-${id} .rounded-full`);
+      const label = document.querySelector(`#user-row-${id} .text-xs.ml-1`);
+      if (dot) { dot.className = `w-2 h-2 rounded-full inline-block ${d.is_active ? 'bg-emerald-500' : 'bg-red-400'}`; }
+      if (label) label.textContent = d.is_active ? 'Active' : 'Inactive';
+    });
+}
+
+function resetPwd(id) {
+  resetUserId = id;
+  document.getElementById('newPwd').value = '';
+  document.getElementById('pwdModal').classList.remove('hidden');
+}
+
+function submitReset() {
+  const pwd = document.getElementById('newPwd').value;
+  fetch(`/manage/users/${resetUserId}/reset-password/`, {
+    method:'POST',
+    headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+    body: JSON.stringify({password: pwd})
+  }).then(r=>r.json()).then(d=>{
+    if (d.error) { alert(d.error); return; }
+    document.getElementById('pwdModal').classList.add('hidden');
+    alert('Password reset successfully.');
+  });
+}
+</script>
+{% endblock %}

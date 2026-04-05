@@ -1,0 +1,203 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "howdy", "what's up"],
+      "responses": ["Hello! How can I help you today?", "Hi there! I'm KAAF Assistant. What do you need?", "Hey! Ready to help you succeed today."]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": ["bye", "goodbye", "see you", "later", "take care", "exit", "quit"],
+      "responses": ["Goodbye! Keep studying hard!", "See you later! Stay focused!", "Take care and good luck with your studies!"]
+    },
+    {
+      "tag": "gpa_query",
+      "patterns": ["what is my gpa", "show my gpa", "my current gpa", "what's my grade point", "gpa", "cumulative gpa", "cgpa"],
+      "responses": ["__GPA__"]
+    },
+    {
+      "tag": "results_query",
+      "patterns": ["show my results", "my grades", "what are my results", "semester results", "exam results", "my scores"],
+      "responses": ["__RESULTS__"]
+    },
+    {
+      "tag": "timetable_query",
+      "patterns": ["show my timetable", "class schedule", "when is my next class", "what class do i have", "today's schedule", "my schedule", "lecture time"],
+      "responses": ["__TIMETABLE__"]
+    },
+    {
+      "tag": "next_class",
+      "patterns": ["next class", "when is my next lecture", "what time is my next class", "upcoming class"],
+      "responses": ["__NEXT_CLASS__"]
+    },
+    {
+      "tag": "motivation",
+      "patterns": ["motivate me", "i need motivation", "inspire me", "i'm feeling down", "encourage me", "i want to give up", "i'm tired of studying"],
+      "responses": ["__MOTIVATION__"]
+    },
+    {
+      "tag": "meditation",
+      "patterns": ["i'm stressed", "help me relax", "meditation", "i need to calm down", "anxiety", "overwhelmed", "mental health"],
+      "responses": ["__MEDITATION__"]
+    },
+    {
+      "tag": "study_tips",
+      "patterns": ["how to study", "study tips", "study techniques", "how can i improve my grades", "study advice", "best way to study"],
+      "responses": ["__STUDY_TIPS__"]
+    },
+    {
+      "tag": "notifications",
+      "patterns": ["my notifications", "any alerts", "reminders", "upcoming deadlines", "what's due", "assignments due"],
+      "responses": ["__NOTIFICATIONS__"]
+    },
+    {
+      "tag": "events",
+      "patterns": ["upcoming events", "school events", "what events", "src events", "school programs", "holidays", "academic calendar"],
+      "responses": ["__EVENTS__"]
+    },
+    {
+      "tag": "planner",
+      "patterns": ["my tasks", "show planner", "my to-do", "pending tasks", "what do i need to do", "task list"],
+      "responses": ["__PLANNER__"]
+    },
+    {
+      "tag": "document_help",
+      "patterns": ["summarize document", "summarize my notes", "what does this document say", "key points", "explain my pdf"],
+      "responses": ["__DOCUMENT_HELP__"]
+    },
+    {
+      "tag": "gpa_improvement",
+      "patterns": ["how to improve my gpa", "improve grades", "gpa tips", "my gpa is low", "failing courses", "academic improvement"],
+      "responses": ["__GPA_TIPS__"]
+    },
+    {
+      "tag": "course_info",
+      "patterns": ["tell me about my courses", "registered courses", "my courses", "course list", "what courses am i taking"],
+      "responses": ["__COURSES__"]
+    },
+    {
+      "tag": "help",
+      "patterns": ["help", "what can you do", "commands", "features", "how do you work", "what are your capabilities"],
+      "responses": ["__HELP__"]
+    },
+    {
+      "tag": "thanks",
+      "patterns": ["thank you", "thanks", "appreciate it", "thank you so much", "great", "awesome"],
+      "responses": ["You're welcome! Anything else I can help with?", "Happy to help! Keep up the great work!", "Anytime! You've got this!"]
+    },
+    {
+      "tag": "weather",
+      "patterns": ["weather", "what's the weather", "is it raining"],
+      "responses": ["I don't have weather data, but I can help you plan your study day! What do you need?"]
+    },
+    {
+      "tag": "joke",
+      "patterns": ["tell me a joke", "make me laugh", "joke", "funny"],
+      "responses": [
+        "Why did the student eat his homework? Because the teacher told him it was a piece of cake!",
+        "What do you call a student who doesn't do homework? A mystery!",
+        "Why is math always sad? Because it has too many problems!"
+      ]
+    },
+    {
+      "tag": "scholarship",
+      "patterns": ["scholarship", "get scholarship", "scholarship application", "financial aid", "bursary", "apply for scholarship", "scholarship eligibility", "scholarship criteria", "kaaf scholarship", "scholarship information", "scholarship fund"],
+      "responses": ["__SCHOLARSHIP__"]
+    },
+    {
+      "tag": "fees",
+      "patterns": ["school fees", "tuition", "how much is fees", "fee payment", "pay fees", "fees deadline", "outstanding fees", "fee structure"],
+      "responses": ["__FEES__"]
+    },
+    {
+      "tag": "graduation",
+      "patterns": ["graduation", "when do i graduate", "graduation requirements", "how many credits to graduate", "graduation ceremony", "convocation"],
+      "responses": ["__GRADUATION__"]
+    },
+    {
+      "tag": "admissions",
+      "patterns": ["admission requirements", "entry requirements", "how do i get admitted", "application process", "apply to kaaf", "prospective student", "admission form", "cut off points", "how to apply to university", "kaaf admissions", "admission process", "admissions", "apply for admission"],
+      "responses": ["__ADMISSIONS__"]
+    },
+    {
+      "tag": "library",
+      "patterns": ["library", "borrow book", "library resources", "e-books", "research papers", "library hours", "digital library", "past questions", "library catalog"],
+      "responses": ["__LIBRARY__"]
+    },
+    {
+      "tag": "career",
+      "patterns": ["internship", "job", "career", "cv help", "resume", "job opportunities", "career services", "mock interview", "national service", "nysc", "employment"],
+      "responses": ["__CAREER__"]
+    },
+    {
+      "tag": "wellness",
+      "patterns": ["wellness", "health tips", "mental health tips", "self care", "physical health", "gym", "nutrition", "sleep tips", "wellbeing"],
+      "responses": ["__WELLNESS__"]
+    },
+    {
+      "tag": "contact",
+      "patterns": ["contact", "phone number", "email address", "office location", "how to reach", "contact details", "who do i call", "department contact"],
+      "responses": ["__CONTACT__"]
+    },
+    {
+      "tag": "staff_info",
+      "patterns": ["my profile", "staff profile", "my courses assigned", "my department", "office hours", "my rank"],
+      "responses": ["__STAFF_INFO__"]
+    },
+    {
+      "tag": "attendance",
+      "patterns": ["attendance", "my attendance", "attendance policy", "minimum attendance", "attendance record", "missed classes"],
+      "responses": ["__ATTENDANCE__"]
+    },
+    {
+      "tag": "exam_info",
+      "patterns": ["exam schedule", "when is exam", "exam timetable", "exam rules", "examination", "exam date", "upcoming exams"],
+      "responses": ["__EXAM_INFO__"]
+    },
+    {
+      "tag": "exam_countdown",
+      "patterns": ["exam countdown", "days until exam", "when is my exam", "how many days to exam", "exam in how many days", "next exam"],
+      "responses": ["__EXAM_COUNTDOWN__"]
+    },
+    {
+      "tag": "course_registration",
+      "patterns": ["register course", "course registration", "how to register", "register for courses", "add course", "drop course", "course clash"],
+      "responses": ["__COURSE_REGISTRATION__"]
+    },
+    {
+      "tag": "transcript",
+      "patterns": ["transcript", "request transcript", "official transcript", "academic transcript", "get my transcript"],
+      "responses": ["__TRANSCRIPT__"]
+    },
+    {
+      "tag": "mood_checkin",
+      "patterns": ["how am i feeling", "mood check", "check in", "i feel", "feeling today", "my mood", "mood tracker"],
+      "responses": ["__MOOD_CHECKIN__"]
+    },
+    {
+      "tag": "study_plan",
+      "patterns": ["study plan", "study schedule", "help me plan", "exam preparation plan", "create study plan", "plan my studies"],
+      "responses": ["__STUDY_PLAN__"]
+    },
+    {
+      "tag": "study_buddy",
+      "patterns": ["study buddy", "study partner", "find study partner", "study group", "study together", "study mate"],
+      "responses": ["__STUDY_BUDDY__"]
+    },
+    {
+      "tag": "leaderboard",
+      "patterns": ["leaderboard", "my rank", "my points", "top students", "who is leading", "ranking", "my streak"],
+      "responses": ["__LEADERBOARD__"]
+    },
+    {
+      "tag": "morning_briefing",
+      "patterns": ["morning briefing", "daily briefing", "what's today", "today summary", "good morning", "what do i have today"],
+      "responses": ["__MORNING_BRIEFING__"]
+    },
+    {
+      "tag": "unknown",
+      "patterns": [],
+      "responses": ["I'm not sure I understand. Could you rephrase that?", "Hmm, I didn't catch that. Try asking about your GPA, timetable, results, or type 'help' for options.", "I'm still learning! Could you be more specific? Type 'help' to see all options."]
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Batches — Admin{% endblock %}
+{% block page_title %}Student Batches{% endblock %}
+{% block page_subtitle %}Manage intake batches by year{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="card">
+    <h3 class="font-semibold mb-4" style="color:var(--text)">Create Batch</h3>
+    <form method="post" class="space-y-3">
+      {% csrf_token %}<input type="hidden" name="action" value="add">
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Batch Name</label>
+        <input name="name" type="text" class="form-input" placeholder="e.g. 2023 Intake" required>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Programme</label>
+        <select name="programme" class="form-input" required>
+          <option value="">— Select Programme —</option>
+          {% for p in programmes %}<option value="{{ p.id }}">{{ p.code }} — {{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Admission Year</label>
+        <input name="admission_year" type="text" class="form-input" placeholder="e.g. 2023/2024" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">+ Create Batch</button>
+    </form>
+  </div>
+
+  <div class="lg:col-span-2 card" style="padding:0;overflow:hidden">
+    <div class="px-5 py-4" style="border-bottom:1px solid var(--border)">
+      <h3 class="font-semibold" style="color:var(--text)">All Batches</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead style="background:var(--bg)">
+          <tr>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Batch</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Programme</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Admission</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Graduation</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Students</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Status</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y" style="border-color:var(--border)">
+          {% for b in batches %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20">
+            <td class="px-4 py-3 font-medium" style="color:var(--text)">{{ b.name }}</td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ b.programme.code }}</td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ b.admission_year }}</td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ b.expected_graduation_year|default:"—" }}</td>
+            <td class="px-4 py-3 text-xs font-semibold" style="color:var(--brand)">{{ b.student_count }}</td>
+            <td class="px-4 py-3">
+              <span class="text-[10px] px-2 py-0.5 rounded-full {% if b.is_active %}bg-emerald-50 text-emerald-600{% else %}bg-gray-100 text-gray-500{% endif %}">
+                {% if b.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-1.5">
+                <form method="post" class="inline">
+                  {% csrf_token %}<input type="hidden" name="action" value="toggle">
+                  <input type="hidden" name="batch_id" value="{{ b.id }}">
+                  <button type="submit" class="text-xs px-2 py-1 rounded-lg transition-colors" style="border:1px solid var(--border);color:var(--muted)">
+                    {% if b.is_active %}Deactivate{% else %}Activate{% endif %}
+                  </button>
+                </form>
+                <form method="post" class="inline" onsubmit="return confirm('Delete batch?')">
+                  {% csrf_token %}<input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="batch_id" value="{{ b.id }}">
+                  <button type="submit" class="text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="px-4 py-8 text-center text-sm" style="color:var(--muted)">No batches yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

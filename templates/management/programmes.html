@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Programmes — Admin{% endblock %}
+{% block page_title %}Programmes & Departments{% endblock %}
+{% block page_subtitle %}Manage faculties, departments and programmes{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- Add Department -->
+  <div class="space-y-4">
+    <div class="card">
+      <h3 class="font-semibold mb-4" style="color:var(--text)">Add Department</h3>
+      <form method="post" class="space-y-3">
+        {% csrf_token %}<input type="hidden" name="action" value="add_department">
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Department Name</label>
+          <input name="dept_name" type="text" class="form-input" placeholder="e.g. Computer Science" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Code</label>
+          <input name="dept_code" type="text" class="form-input" placeholder="e.g. CS" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Faculty</label>
+          <input name="faculty" type="text" class="form-input" placeholder="e.g. Faculty of IT" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">+ Add Department</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 class="font-semibold mb-4" style="color:var(--text)">Add Programme</h3>
+      <form method="post" class="space-y-3">
+        {% csrf_token %}<input type="hidden" name="action" value="add_programme">
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Programme Name</label>
+          <input name="prog_name" type="text" class="form-input" placeholder="e.g. BSc Computer Science" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Code</label>
+          <input name="prog_code" type="text" class="form-input" placeholder="e.g. BSCS" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Department</label>
+          <select name="department" class="form-input" required>
+            <option value="">— Select —</option>
+            {% for d in departments %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Duration (years)</label>
+          <select name="duration" class="form-input">
+            <option value="2">2 years</option>
+            <option value="3">3 years</option>
+            <option value="4" selected>4 years</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">+ Add Programme</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Departments & Programmes list -->
+  <div class="lg:col-span-2 space-y-4">
+    {% for dept in departments %}
+    <div class="card">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="font-semibold" style="color:var(--text)">{{ dept.name }}</p>
+          <p class="text-xs" style="color:var(--muted)">{{ dept.faculty }} · Code: {{ dept.code }}</p>
+        </div>
+        <form method="post" onsubmit="return confirm('Delete department and all its programmes?')">
+          {% csrf_token %}<input type="hidden" name="action" value="delete_department">
+          <input type="hidden" name="dept_id" value="{{ dept.id }}">
+          <button type="submit" class="text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">Delete</button>
+        </form>
+      </div>
+      <div class="space-y-1.5">
+        {% for prog in dept.programme_set.all %}
+        <div class="flex items-center justify-between px-3 py-2 rounded-lg" style="background:var(--bg)">
+          <div>
+            <span class="text-sm font-medium" style="color:var(--text)">{{ prog.name }}</span>
+            <span class="text-xs ml-2 px-1.5 py-0.5 rounded" style="background:var(--brand-lt);color:var(--brand)">{{ prog.code }}</span>
+            <span class="text-xs ml-1" style="color:var(--muted)">{{ prog.duration_years }}yr</span>
+          </div>
+          <form method="post" onsubmit="return confirm('Delete this programme?')">
+            {% csrf_token %}<input type="hidden" name="action" value="delete_programme">
+            <input type="hidden" name="prog_id" value="{{ prog.id }}">
+            <button type="submit" class="text-xs text-red-500 hover:text-red-700">✕</button>
+          </form>
+        </div>
+        {% empty %}
+        <p class="text-xs px-3 py-2" style="color:var(--muted)">No programmes yet</p>
+        {% endfor %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="card text-center py-8"><p class="text-sm" style="color:var(--muted)">No departments yet.</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

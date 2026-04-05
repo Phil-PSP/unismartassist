@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel — KAAF{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+{% block page_subtitle %}Manage users, results, announcements & more{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Quick nav cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <a href="{% url 'admin_announcements' %}" class="card card-hover flex flex-col items-center gap-3 py-6 text-center">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background:var(--brand-lt)">
+        <svg class="w-6 h-6" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+      </div>
+      <div>
+        <p class="font-bold text-lg" style="color:var(--text)">{{ total_announcements }}</p>
+        <p class="text-sm" style="color:var(--muted)">Announcements</p>
+      </div>
+    </a>
+    <a href="{% url 'admin_users' %}" class="card card-hover flex flex-col items-center gap-3 py-6 text-center">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </div>
+      <div>
+        <p class="font-bold text-lg" style="color:var(--text)">{{ total_users }}</p>
+        <p class="text-sm" style="color:var(--muted)">Total Users</p>
+      </div>
+    </a>
+    <a href="{% url 'admin_results' %}" class="card card-hover flex flex-col items-center gap-3 py-6 text-center">
+      <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <div>
+        <p class="font-bold text-lg" style="color:var(--text)">{{ total_results }}</p>
+        <p class="text-sm" style="color:var(--muted)">Results Uploaded</p>
+      </div>
+    </a>
+    <a href="{% url 'admin_groups' %}" class="card card-hover flex flex-col items-center gap-3 py-6 text-center">
+      <div class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center">
+        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <div>
+        <p class="font-bold text-lg" style="color:var(--text)">{{ total_students }}</p>
+        <p class="text-sm" style="color:var(--muted)">Student Groups</p>
+      </div>
+    </a>
+  </div>
+
+  <!-- Quick links row -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <a href="{% url 'admin_add_user' %}" class="btn btn-primary justify-center">+ Add User</a>
+    <a href="{% url 'admin_announcements' %}" class="btn btn-secondary justify-center">📢 Announcement</a>
+    <a href="{% url 'admin_results' %}" class="btn btn-secondary justify-center">📊 Upload Results</a>
+    <a href="{% url 'admin_events' %}" class="btn btn-secondary justify-center">📅 Create Event</a>
+    <a href="{% url 'admin_programmes' %}" class="btn btn-secondary justify-center">🎓 Programmes</a>
+    <a href="{% url 'admin_batches' %}" class="btn btn-secondary justify-center">📋 Batches</a>
+    <a href="{% url 'admin_levels' %}" class="btn btn-secondary justify-center">📈 Levels</a>
+    <a href="{% url 'admin_group_chats' %}" class="btn btn-secondary justify-center">💬 Group Chats</a>
+  </div>
+
+  <!-- Recent announcements -->
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold" style="color:var(--text)">Recent Announcements</h3>
+      <a href="{% url 'admin_announcements' %}" class="text-xs" style="color:var(--brand)">View all →</a>
+    </div>
+    <div class="space-y-2">
+      {% for ann in recent_announcements %}
+      <div class="flex items-start gap-3 p-3 rounded-xl" style="background:var(--bg)">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:var(--brand-lt)">
+          <svg class="w-4 h-4" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ ann.title }}</p>
+          <p class="text-xs" style="color:var(--muted)">{{ ann.get_target_display }} · {{ ann.created_at|date:"M d, H:i" }}</p>
+        </div>
+        <span class="text-[10px] px-2 py-0.5 rounded-full {% if ann.is_active %}bg-emerald-50 text-emerald-600{% else %}bg-gray-100 text-gray-500{% endif %}">
+          {% if ann.is_active %}Active{% else %}Inactive{% endif %}
+        </span>
+      </div>
+      {% empty %}
+      <p class="text-sm text-center py-4" style="color:var(--muted)">No announcements yet</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

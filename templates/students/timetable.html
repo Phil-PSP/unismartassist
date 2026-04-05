@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load student_tags %}
+{% block title %}Timetable — KAAF{% endblock %}
+{% block page_title %}Class Timetable{% endblock %}
+{% block page_subtitle %}{{ profile.academic_year }} · Semester {{ profile.semester }}{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="card">
+    {% for day in days_order %}
+    {% if schedule|get_item:day %}
+    <div class="{% if not forloop.first %}mt-6 pt-6 border-t border-gray-100 dark:border-gray-700/60{% endif %}">
+      <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full" style="background:var(--brand)"></span>
+        {{ day }}
+      </h4>
+      <div class="space-y-2.5">
+        {% for entry in schedule|get_item:day %}
+        <div class="flex items-center gap-4 p-3.5 rounded-xl border
+          {% if entry.entry_type == 'exam' %}bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/30
+          {% elif entry.entry_type == 'lab' %}bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800/30
+          {% else %}bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/30{% endif %}">
+          <div class="text-center min-w-[60px] bg-white dark:bg-gray-700 rounded-lg py-2 shadow-sm flex-shrink-0">
+            <p class="text-xs font-bold text-gray-700 dark:text-gray-300">{{ entry.start_time|time:"H:i" }}</p>
+            <p class="text-[10px] text-gray-400">{{ entry.end_time|time:"H:i" }}</p>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm text-gray-900 dark:text-white">{{ entry.course.name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ entry.course.code }} · {{ entry.venue }}</p>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0
+            {% if entry.entry_type == 'exam' %}bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400
+            {% elif entry.entry_type == 'lab' %}bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400
+            {% else %}bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400{% endif %}">
+            {{ entry.entry_type|title }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    {% if not schedule.MON and not schedule.TUE and not schedule.WED %}
+    <div class="text-center py-16">
+      <p class="text-5xl mb-4">📅</p>
+      <p class="text-gray-500 dark:text-gray-400">No timetable entries found. Contact your department.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Student Performance - KAAF{% endblock %}
+{% block page_title %}Student Performance{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  {% for item in performance_data %}
+  <div class="card">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-semibold">{{ item.course.name }} ({{ item.course.code }})</h3>
+      <div class="text-right">
+        <p class="text-sm text-gray-500">{{ item.total_students }} students</p>
+        <p class="text-sm font-medium text-blue-600">Avg: {{ item.avg_score }}%</p>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-gray-500 border-b border-gray-100 dark:border-gray-700">
+            <th class="pb-2">Student ID</th>
+            <th class="pb-2">Name</th>
+            <th class="pb-2 text-center">Score</th>
+            <th class="pb-2 text-center">Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in item.results %}
+          <tr class="border-b border-gray-50 dark:border-gray-700 last:border-0">
+            <td class="py-2 font-mono text-xs text-gray-500">{{ result.student.user.user_id }}</td>
+            <td class="py-2">{{ result.student.user.get_full_name }}</td>
+            <td class="py-2 text-center">{{ result.score|default:"-" }}</td>
+            <td class="py-2 text-center">
+              <span class="px-2 py-0.5 rounded text-xs font-bold
+                {% if result.grade in 'A+,A' %}bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400
+                {% elif result.grade in 'B+,B' %}bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400
+                {% elif result.grade in 'C+,C' %}bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400
+                {% else %}bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400{% endif %}">
+                {{ result.grade|default:"-" }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% empty %}
+  <div class="card text-center py-12">
+    <p class="text-gray-500">No performance data available.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

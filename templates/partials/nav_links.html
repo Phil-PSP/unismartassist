@@ -1,0 +1,176 @@
+<a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+  <span x-show="sidebarOpen !== false" class="truncate">Dashboard</span>
+  <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Dashboard</span>
+</a>
+
+{% if user.is_admin %}
+<div x-data="{ adminOpen: {% if 'admin_' in request.resolver_match.url_name %}true{% else %}false{% endif %} }">
+  <div class="flex items-center">
+    <a href="{% url 'admin_overview' %}" class="nav-link flex-1 {% if request.resolver_match.url_name == 'admin_overview' %}active{% endif %}">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span x-show="sidebarOpen !== false" class="truncate">Admin Panel</span>
+      <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Admin Panel</span>
+    </a>
+    <button x-show="sidebarOpen !== false" @click.prevent="adminOpen=!adminOpen"
+            class="w-6 h-6 flex items-center justify-center rounded-md mr-1 flex-shrink-0 transition-colors"
+            style="color:var(--muted)" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">
+      <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="adminOpen?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+  </div>
+  <div x-show="adminOpen && sidebarOpen !== false" x-cloak
+       x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+       class="ml-4 mt-0.5 space-y-0.5 border-l pl-2" style="border-color:var(--border)">
+    {% for url_name, label, icon in admin_nav_items %}
+    <a href="{% url url_name %}" class="nav-link py-1.5 text-xs {% if request.resolver_match.url_name == url_name %}active{% endif %}">
+      <span class="text-sm">{{ icon }}</span>
+      <span class="truncate">{{ label }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+<!-- AI Chatbot with expandable session history -->
+<div x-data="{ chatOpen: {% if 'chatbot' in request.resolver_match.url_name %}true{% else %}false{% endif %} }">
+  <div class="flex items-center">
+    <a href="{% url 'chatbot' %}" class="nav-link flex-1 {% if request.resolver_match.url_name == 'chatbot' %}active{% endif %}">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+      <span x-show="sidebarOpen !== false" class="truncate">AI Chatbot</span>
+      <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">AI Chatbot</span>
+    </a>
+    <!-- Chevron toggle — only visible when sidebar is open -->
+    <button x-show="sidebarOpen !== false"
+            @click.prevent="chatOpen = !chatOpen"
+            class="w-6 h-6 flex items-center justify-center rounded-md mr-1 transition-colors flex-shrink-0"
+            style="color:var(--muted)"
+            onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">
+      <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="chatOpen ? 'rotate-180' : ''"
+           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Session history sub-items -->
+  <div x-show="chatOpen && sidebarOpen !== false" x-cloak
+       x-transition:enter="transition ease-out duration-150"
+       x-transition:enter-start="opacity-0 -translate-y-1"
+       x-transition:enter-end="opacity-100 translate-y-0"
+       class="ml-4 mt-0.5 space-y-0.5 border-l pl-2"
+       style="border-color:var(--border)">
+    {% for session in chat_sessions %}
+    <div class="flex items-center gap-1 group">
+      <a href="{% url 'chatbot' %}?session={{ session.id }}"
+         class="nav-link py-1.5 text-xs flex-1 min-w-0 {% if request.GET.session == session.id|stringformat:'s' %}active{% endif %}">
+        <svg class="w-3 h-3 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        <span class="truncate">{{ session.last_activity|date:"M d, H:i" }}</span>
+      </a>
+      <!-- Delete single session -->
+      <button onclick="deleteSession({{ session.id }}, this)"
+              title="Delete this chat"
+              class="w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+              style="color:#ef4444"
+              onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    {% empty %}
+    <p class="text-[11px] px-2 py-1" style="color:var(--muted)">No previous chats</p>
+    {% endfor %}
+
+    <div class="flex items-center gap-1 pt-1 mt-1" style="border-top:1px solid var(--border)">
+      <a href="{% url 'chatbot' %}" class="nav-link py-1.5 text-xs flex-1" style="color:var(--brand)">
+        <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>New Chat</span>
+      </a>
+      {% if chat_sessions %}
+      <button onclick="deleteAllSessions()"
+              title="Clear all chat history"
+              class="text-[10px] px-2 py-1 rounded transition-colors flex-shrink-0"
+              style="color:#ef4444;border:1px solid #fecaca"
+              onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+        Clear all
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+function deleteSession(sessionId, btn) {
+  if (!confirm('Delete this chat?')) return;
+  fetch(`/chatbot/delete-session/${sessionId}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '' }
+  }).then(r => r.json()).then(d => {
+    if (d.status === 'ok') {
+      const item = btn.closest('.flex.items-center.gap-1.group');
+      if (item) item.remove();
+      // If we deleted the current session, go to fresh chat
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('session') == sessionId) {
+        window.location.href = '/chatbot/';
+      }
+    }
+  });
+}
+
+function deleteAllSessions() {
+  if (!confirm('Delete all chat history? This cannot be undone.')) return;
+  fetch('/chatbot/delete-all/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '' }
+  }).then(r => r.json()).then(d => {
+    if (d.status === 'ok') window.location.href = '/chatbot/';
+  });
+}
+</script>
+
+{% if user.is_student %}
+<p x-show="sidebarOpen !== false" class="nav-section">Academic</p>
+<a href="{% url 'results' %}" class="nav-link {% if request.resolver_match.url_name == 'results' %}active{% endif %}">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+  <span x-show="sidebarOpen !== false" class="truncate">Results & GPA</span>
+  <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Results & GPA</span>
+</a>
+<a href="{% url 'timetable' %}" class="nav-link {% if request.resolver_match.url_name == 'timetable' %}active{% endif %}">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+  <span x-show="sidebarOpen !== false" class="truncate">Timetable</span>
+  <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Timetable</span>
+</a>
+<a href="{% url 'documents' %}" class="nav-link {% if request.resolver_match.url_name == 'documents' %}active{% endif %}">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+  <span x-show="sidebarOpen !== false" class="truncate">Documents</span>
+  <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Documents</span>
+</a>
+{% endif %}
+
+<p x-show="sidebarOpen !== false" class="nav-section">Productivity</p>
+<a href="{% url 'planner' %}" class="nav-link {% if request.resolver_match.url_name == 'planner' %}active{% endif %}">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+  <span x-show="sidebarOpen !== false" class="truncate">Planner</span>
+  <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Planner</span>
+</a>
+<a href="{% url 'study_timer' %}" class="nav-link {% if request.resolver_match.url_name == 'study_timer' %}active{% endif %}">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  <span x-show="sidebarOpen !== false" class="truncate">Study Timer</span>
+  <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Study Timer</span>
+</a>
+<a href="{% url 'notifications' %}" class="nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+  <span x-show="sidebarOpen !== false" class="truncate">Notifications</span>
+  <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Notifications</span>
+</a>
+<a href="{% url 'leaderboard' %}" class="nav-link {% if request.resolver_match.url_name == 'leaderboard' %}active{% endif %}">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+  <span x-show="sidebarOpen !== false" class="truncate">Leaderboard</span>
+  <span x-show="sidebarOpen === false" x-cloak class="nav-tooltip">Leaderboard</span>
+</a>

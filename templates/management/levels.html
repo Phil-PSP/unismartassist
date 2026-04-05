@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Academic Levels — Admin{% endblock %}
+{% block page_title %}Academic Levels{% endblock %}
+{% block page_subtitle %}Configure levels per programme and academic year{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="card">
+    <h3 class="font-semibold mb-4" style="color:var(--text)">Add / Update Level</h3>
+    <form method="post" class="space-y-3">
+      {% csrf_token %}<input type="hidden" name="action" value="add">
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Programme</label>
+        <select name="programme" class="form-input" required>
+          <option value="">— Select —</option>
+          {% for p in programmes %}<option value="{{ p.id }}">{{ p.code }} — {{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Level</label>
+        <select name="level" class="form-input" required>
+          <option value="100">Level 100 (Year 1)</option>
+          <option value="200">Level 200 (Year 2)</option>
+          <option value="300">Level 300 (Year 3)</option>
+          <option value="400">Level 400 (Year 4)</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Academic Year</label>
+        <input name="academic_year" type="text" class="form-input" placeholder="e.g. 2024/2025" required>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Label (optional)</label>
+        <input name="label" type="text" class="form-input" placeholder="e.g. Foundation Year">
+      </div>
+      <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)">
+        <input name="is_current" type="checkbox" class="rounded">
+        Mark as current active level
+      </label>
+      <button type="submit" class="btn btn-primary w-full">Save Level</button>
+    </form>
+  </div>
+
+  <div class="lg:col-span-2 card" style="padding:0;overflow:hidden">
+    <div class="px-5 py-4" style="border-bottom:1px solid var(--border)">
+      <h3 class="font-semibold" style="color:var(--text)">Configured Levels</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead style="background:var(--bg)">
+          <tr>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Programme</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Level</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Year</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Label</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Students</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Current</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y" style="border-color:var(--border)">
+          {% for lvl in levels %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20">
+            <td class="px-4 py-3 text-xs font-medium" style="color:var(--text)">{{ lvl.programme.code }}</td>
+            <td class="px-4 py-3">
+              <span class="text-xs px-2 py-0.5 rounded-full font-bold" style="background:var(--brand-lt);color:var(--brand)">
+                Level {{ lvl.level }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ lvl.academic_year }}</td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ lvl.label|default:"—" }}</td>
+            <td class="px-4 py-3 text-xs font-semibold" style="color:var(--brand)">{{ lvl.student_count }}</td>
+            <td class="px-4 py-3">
+              {% if lvl.is_current %}
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Current</span>
+              {% else %}
+              <form method="post" class="inline">
+                {% csrf_token %}<input type="hidden" name="action" value="set_current">
+                <input type="hidden" name="level_id" value="{{ lvl.id }}">
+                <button type="submit" class="text-[10px] px-2 py-0.5 rounded-full transition-colors" style="border:1px solid var(--border);color:var(--muted)">Set current</button>
+              </form>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <form method="post" class="inline" onsubmit="return confirm('Delete level?')">
+                {% csrf_token %}<input type="hidden" name="action" value="delete">
+                <input type="hidden" name="level_id" value="{{ lvl.id }}">
+                <button type="submit" class="text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="px-4 py-8 text-center text-sm" style="color:var(--muted)">No levels configured yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

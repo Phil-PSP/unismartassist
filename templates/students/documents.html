@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Documents - KAAF{% endblock %}
+{% block page_title %}Document Assistant{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Upload Form -->
+  <div class="card">
+    <h3 class="font-semibold mb-4">Upload Document</h3>
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Document Title</label>
+        {{ form.title }}
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">File (PDF, DOC, TXT)</label>
+        {{ form.file }}
+      </div>
+      <button type="submit" class="btn btn-primary">Upload & Analyze</button>
+    </form>
+    <p class="text-xs text-gray-400 mt-2">AI will automatically summarize and extract key points from your document.</p>
+  </div>
+
+  <!-- Documents List -->
+  <div class="card">
+    <h3 class="font-semibold mb-4">My Documents</h3>
+    {% if documents %}
+    <div class="space-y-3">
+      {% for doc in documents %}
+      <a href="{% url 'document_detail' doc.id %}" class="block p-4 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+            <span class="text-blue-600 text-sm font-bold">{{ doc.file_type|upper }}</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-sm text-gray-900 dark:text-white">{{ doc.title }}</p>
+            <p class="text-xs text-gray-500">{{ doc.uploaded_at|date:"M d, Y" }}</p>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full {% if doc.processed %}bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400{% else %}bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400{% endif %}">
+            {% if doc.processed %}✓ Processed{% else %}⏳ Processing{% endif %}
+          </span>
+        </div>
+        {% if doc.summary %}
+        <p class="text-xs text-gray-500 mt-2 line-clamp-2">{{ doc.summary|truncatechars:120 }}</p>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500 py-8">📄 No documents yet. Upload your notes or PDFs for AI analysis!</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

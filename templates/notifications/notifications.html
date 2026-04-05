@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Notifications — KAAF{% endblock %}
+{% block page_title %}Notifications & Events{% endblock %}
+{% block page_subtitle %}Stay up to date{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+  <!-- Header Actions -->
+  <div class="flex justify-between items-center">
+    <span class="badge bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">{{ unread_count }} unread</span>
+    {% if unread_count > 0 %}
+    <button onclick="markAllRead()" class="text-sm font-medium hover:underline" style="color:var(--brand)">Mark all as read</button>
+    {% endif %}
+  </div>
+
+  <!-- Notifications -->
+  <div class="card">
+    <h3 class="font-semibold mb-4 text-gray-900 dark:text-white">Notifications</h3>
+    {% if notifications %}
+    <div class="space-y-2.5" id="notifications-list">
+      {% for notif in notifications %}
+      <div class="flex items-start gap-3 p-3.5 rounded-xl border transition-colors
+        {% if not notif.is_read %}bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800/30
+        {% else %}border-gray-100 dark:border-gray-700/60 opacity-60{% endif %}"
+        id="notif-{{ notif.id }}">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base
+          {% if notif.notification_type == 'exam' %}bg-red-100 dark:bg-red-900/30
+          {% elif notif.notification_type == 'assignment' %}bg-amber-100 dark:bg-amber-900/30
+          {% elif notif.notification_type == 'motivation' %}bg-yellow-100 dark:bg-yellow-900/30
+          {% elif notif.notification_type == 'class' %}bg-blue-100 dark:bg-blue-900/30
+          {% else %}bg-gray-100 dark:bg-gray-700{% endif %}">
+          {% if notif.notification_type == 'exam' %}📝
+          {% elif notif.notification_type == 'assignment' %}📋
+          {% elif notif.notification_type == 'motivation' %}💪
+          {% elif notif.notification_type == 'class' %}📚
+          {% elif notif.notification_type == 'event' %}📅
+          {% else %}🔔{% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-sm text-gray-900 dark:text-white">{{ notif.title }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ notif.message }}</p>
+          <p class="text-xs text-gray-400 mt-1">{{ notif.created_at|timesince }} ago</p>
+        </div>
+        {% if not notif.is_read %}
+        <button onclick="markRead({{ notif.id }})" class="text-xs hover:underline flex-shrink-0 font-medium" style="color:var(--brand)">Read</button>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-10">
+      <p class="text-4xl mb-3">✅</p>
+      <p class="text-gray-500 dark:text-gray-400 text-sm">You're all caught up!</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Announcements -->
+  {% if announcements %}
+  <div class="card">
+    <h3 class="font-semibold mb-4 text-gray-900 dark:text-white">Announcements</h3>
+    <div class="space-y-3">
+      {% for ann in announcements %}
+      <div class="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-xl">
+        <p class="font-semibold text-sm text-gray-900 dark:text-white">{{ ann.title }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1.5">{{ ann.content }}</p>
+        <p class="text-xs text-gray-400 mt-2">{{ ann.created_at|date:"M d, Y" }} · {{ ann.get_target_display }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Upcoming Events -->
+  <div class="card">
+    <h3 class="font-semibold mb-4 text-gray-900 dark:text-white">Upcoming Events</h3>
+    {% if events %}
+    <div class="space-y-2.5">
+      {% for event in events %}
+      <div class="flex items-center gap-4 p-3.5 border border-gray-100 dark:border-gray-700/60 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+        <div class="text-center rounded-xl p-2 min-w-[52px] flex-shrink-0" style="background:var(--brand-lt)">
+          <p class="text-[10px] font-bold uppercase" style="color:var(--brand)">{{ event.date|date:"M" }}</p>
+          <p class="text-xl font-bold leading-tight" style="color:var(--brand)">{{ event.date|date:"d" }}</p>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-sm text-gray-900 dark:text-white">{{ event.title }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ event.location|default:"TBA" }} · {{ event.get_event_type_display }}</p>
+          {% if event.description %}<p class="text-xs text-gray-400 mt-1">{{ event.description|truncatechars:80 }}</p>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500 dark:text-gray-400 text-sm py-6">No upcoming events.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+function markRead(id) {
+  fetch(`/notifications/${id}/read/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF } })
+    .then(() => {
+      const el = document.getElementById(`notif-${id}`);
+      if (el) { el.classList.remove('bg-blue-50', 'dark:bg-blue-900/20'); el.classList.add('opacity-60'); }
+    });
+}
+
+function markAllRead() {
+  fetch('/notifications/mark-all-read/', { method: 'POST', headers: { 'X-CSRFToken': CSRF } })
+    .then(() => location.reload());
+}
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}GPA Dashboard - KAAF{% endblock %}
+{% block page_title %}Academic Insights{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- GPA Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card grad-brand text-white">
+      <p class="text-sm opacity-80">Cumulative GPA</p>
+      <p class="text-4xl font-bold mt-1">{{ profile.cumulative_gpa }}</p>
+    </div>
+    <div class="card">
+      <p class="text-sm text-gray-500">Strong Subjects</p>
+      <p class="text-3xl font-bold text-green-600 mt-1">{{ strong_subjects|length }}</p>
+    </div>
+    <div class="card">
+      <p class="text-sm text-gray-500">Weak Subjects</p>
+      <p class="text-3xl font-bold text-red-600 mt-1">{{ weak_subjects|length }}</p>
+    </div>
+  </div>
+
+  <!-- GPA Trend -->
+  {% if gpa_trend %}
+  <div class="card">
+    <h3 class="font-semibold mb-4">GPA Trend Over Time</h3>
+    <canvas id="gpaChart" height="80"></canvas>
+  </div>
+  {% endif %}
+
+  <!-- Performance by Course -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {% if strong_subjects %}
+    <div class="card">
+      <h3 class="font-semibold text-green-600 mb-3">💪 Strong Subjects</h3>
+      <div class="space-y-2">
+        {% for s in strong_subjects %}
+        <div class="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-700 last:border-0">
+          <span class="text-sm text-gray-700 dark:text-gray-300">{{ s.course }}</span>
+          <span class="text-sm font-bold text-green-600">{{ s.grade }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if weak_subjects %}
+    <div class="card">
+      <h3 class="font-semibold text-red-600 mb-3">⚠️ Needs Improvement</h3>
+      <div class="space-y-2">
+        {% for s in weak_subjects %}
+        <div class="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-700 last:border-0">
+          <span class="text-sm text-gray-700 dark:text-gray-300">{{ s.course }}</span>
+          <span class="text-sm font-bold text-red-600">{{ s.grade }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Improvement Tips -->
+  {% if improvement_tips %}
+  <div class="card">
+    <h3 class="font-semibold mb-4">📈 AI Improvement Tips</h3>
+    <div class="space-y-3">
+      {% for tip in improvement_tips %}
+      <div class="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <span class="text-blue-500 mt-0.5">💡</span>
+        <p class="text-sm text-gray-700 dark:text-gray-300">{{ tip }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const trendData = {{ gpa_trend|safe }};
+if (trendData.length > 0) {
+  new Chart(document.getElementById('gpaChart'), {
+    type: 'line',
+    data: {
+      labels: trendData.map(d => d.label),
+      datasets: [{
+        label: 'GPA',
+        data: trendData.map(d => d.gpa),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.1)',
+        tension: 0.4, fill: true,
+        pointBackgroundColor: '#3b82f6', pointRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { min: 0, max: 4, ticks: { stepSize: 0.5 } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+</script>
+{% endblock %}

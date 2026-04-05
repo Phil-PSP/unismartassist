@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Add Task — KAAF{% endblock %}
+{% block page_title %}Add Task{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="card">
+    <h2 class="font-semibold mb-6 text-gray-900 dark:text-white">New Task</h2>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p class="text-red-500 text-xs mt-1.5">{{ field.errors }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn btn-primary flex-1">Add Task</button>
+        <a href="{% url 'planner' %}" class="btn btn-secondary flex-1 text-center">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

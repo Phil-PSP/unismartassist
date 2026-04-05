@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Events — Admin{% endblock %}
+{% block page_title %}Events{% endblock %}
+{% block page_subtitle %}Create and manage university events{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- Create event form -->
+  <div class="card">
+    <h3 class="font-semibold mb-4" style="color:var(--text)">Create Event</h3>
+    <form method="post" class="space-y-3">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Title</label>
+        <input name="title" type="text" class="form-input" required>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Type</label>
+        <select name="event_type" class="form-input">
+          {% for val, label in event_types %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Start Date</label>
+          <input name="date" type="date" class="form-input" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">End Date</label>
+          <input name="end_date" type="date" class="form-input">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Location</label>
+        <input name="location" type="text" class="form-input" placeholder="e.g. Main Auditorium">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Description</label>
+        <textarea name="description" rows="3" class="form-input resize-none"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">📅 Create Event</button>
+    </form>
+  </div>
+
+  <!-- Events list -->
+  <div class="lg:col-span-2 space-y-3">
+    {% for event in events %}
+    <div class="card flex items-start gap-4" id="event-{{ event.id }}">
+      <div class="text-center rounded-xl p-2.5 min-w-[56px] flex-shrink-0" style="background:var(--brand-lt)">
+        <p class="text-[10px] font-bold uppercase" style="color:var(--brand)">{{ event.date|date:"M" }}</p>
+        <p class="text-xl font-bold leading-tight" style="color:var(--brand)">{{ event.date|date:"d" }}</p>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <p class="font-semibold text-sm" style="color:var(--text)">{{ event.title }}</p>
+          <span class="text-[10px] px-2 py-0.5 rounded-full" style="background:var(--bg);color:var(--muted);border:1px solid var(--border)">
+            {{ event.get_event_type_display }}
+          </span>
+        </div>
+        {% if event.description %}
+        <p class="text-xs mt-0.5 line-clamp-1" style="color:var(--muted)">{{ event.description }}</p>
+        {% endif %}
+        <p class="text-xs mt-1" style="color:var(--muted)">
+          📍 {{ event.location|default:"TBA" }}
+          {% if event.end_date %} · Until {{ event.end_date|date:"M d" }}{% endif %}
+        </p>
+      </div>
+      <button onclick="deleteEvent({{ event.id }})"
+              class="text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex-shrink-0">
+        Delete
+      </button>
+    </div>
+    {% empty %}
+    <div class="card text-center py-8">
+      <p class="text-sm" style="color:var(--muted)">No events yet. Create one!</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+function deleteEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  fetch(`/manage/events/${id}/delete/`, { method:'POST', headers:{'X-CSRFToken':CSRF} })
+    .then(r=>r.json()).then(()=>document.getElementById(`event-${id}`).remove());
+}
+</script>
+{% endblock %}

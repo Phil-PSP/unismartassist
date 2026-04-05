@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Student Groups — Admin{% endblock %}
+{% block page_title %}Student Groups{% endblock %}
+{% block page_subtitle %}View cohorts and send targeted notifications{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- Send group notification -->
+  <div class="card">
+    <h3 class="font-semibold mb-4" style="color:var(--text)">Send Group Notification</h3>
+    <form method="post" action="{% url 'admin_group_notify' %}" class="space-y-3">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Programme (optional)</label>
+        <select name="programme_id" class="form-input">
+          <option value="">All Programmes</option>
+          {% for prog in programmes %}
+          <option value="{{ prog.id }}">{{ prog.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Level (optional)</label>
+        <select name="level" class="form-input">
+          <option value="">All Levels</option>
+          <option value="100">Level 100</option>
+          <option value="200">Level 200</option>
+          <option value="300">Level 300</option>
+          <option value="400">Level 400</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Title</label>
+        <input name="title" type="text" class="form-input" required>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Message</label>
+        <textarea name="message" rows="4" class="form-input resize-none" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">📨 Send to Group</button>
+    </form>
+  </div>
+
+  <!-- Cohort list -->
+  <div class="lg:col-span-2 space-y-3">
+    {% for cohort_name, members in cohort_map.items %}
+    <div class="card">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="font-semibold text-sm" style="color:var(--text)">{{ cohort_name }}</p>
+          <p class="text-xs" style="color:var(--muted)">{{ members|length }} student{{ members|length|pluralize }}</p>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="background:var(--brand-lt);color:var(--brand)">
+          {{ members|length }}
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        {% for sp in members|slice:":12" %}
+        <span class="text-[11px] px-2 py-0.5 rounded-full" style="background:var(--bg);color:var(--muted);border:1px solid var(--border)">
+          {{ sp.user.user_id }}
+        </span>
+        {% endfor %}
+        {% if members|length > 12 %}
+        <span class="text-[11px] px-2 py-0.5 rounded-full" style="background:var(--bg);color:var(--muted)">
+          +{{ members|length|add:"-12" }} more
+        </span>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="card text-center py-8">
+      <p class="text-sm" style="color:var(--muted)">No student groups found.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
