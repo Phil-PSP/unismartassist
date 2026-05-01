@@ -1,1 +1,1 @@
-{\n  "$schema": "https://railway.com/railway.schema.json",\n  "build": {\n    "builder": "NIXPACKS"\n  },\n  "deploy": {\n    "startCommand": "daphne kaaf.asgi:application --port $PORT --bind 0.0.0.0",\n    "restartPolicyType": "ON_FAILURE",\n    "restartPolicyMaxRetries": 10\n  }\n}\n
+{\n  "$schema": "https://railway.com/railway.schema.json",\n  "build": {\n    "builder": "RAILPACK"\n  }\n}\n
