@@ -34,31 +34,40 @@ def dashboard_view(request):
 
 def _student_dashboard_data(user):
     """Dashboard data for students"""
+    defaults = {
+        'profile': None,
+        'today_classes': [],
+        'pending_tasks': 0,
+        'overdue_count': 0,
+        'gpa': '0.00',
+        'points': user.points,
+        'streak': user.study_streak,
+    }
     try:
         profile = user.student_profile
         from apps.students.models import Timetable
         today = timezone.now().strftime('%A')[:3].upper()
         registered = profile.registrations.filter(is_active=True).values_list('course_id', flat=True)
-        today_classes = Timetable.objects.filter(
+        today_classes = list(Timetable.objects.filter(
             course_id__in=registered, day=today,
             academic_year=profile.academic_year,
-        ).select_related('course').order_by('start_time')
+        ).select_related('course').order_by('start_time'))
 
         from apps.planner.models import Task
-        pending_tasks = Task.objects.filter(user=user, is_completed=False).count()
-        overdue_tasks = [t for t in Task.objects.filter(user=user, is_completed=False) if t.is_overdue]
+        all_pending = Task.objects.filter(user=user, is_completed=False)
+        pending_tasks = all_pending.count()
+        overdue_count = sum(1 for t in all_pending if t.is_overdue)
 
-        return {
+        defaults.update({
             'profile': profile,
             'today_classes': today_classes,
             'pending_tasks': pending_tasks,
-            'overdue_count': len(overdue_tasks),
+            'overdue_count': overdue_count,
             'gpa': profile.cumulative_gpa,
-            'points': user.points,
-            'streak': user.study_streak,
-        }
+        })
     except Exception:
-        return {}
+        pass
+    return defaults
 
 
 def _staff_dashboard_data(user):

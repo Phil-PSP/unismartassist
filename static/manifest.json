@@ -1,0 +1,41 @@
+{
+  "name": "KAAF University AI Assistant",
+  "short_name": "KAAF AI",
+  "description": "Your Smart Campus Companion — AI chatbot, GPA tracker, timetable and more",
+  "start_url": "/dashboard/",
+  "display": "standalone",
+  "background_color": "#fafaf8",
+  "theme_color": "#c88500",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/my-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/my-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {
+      "name": "AI Chat",
+      "short_name": "Chat",
+      "description": "Open the AI chatbot",
+      "url": "/chatbot/",
+      "icons": [{ "src": "/static/my-logo.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "My Results",
+      "short_name": "Results",
+      "description": "View your academic results",
+      "url": "/students/results/",
+      "icons": [{ "src": "/static/my-logo.png", "sizes": "96x96" }]
+    }
+  ]
+}

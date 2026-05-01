@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline — KAAF University</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #fafaf8; font-family: 'Inter', system-ui, sans-serif; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <div class="text-center max-w-md">
+    <div class="w-24 h-24 mx-auto mb-6 rounded-3xl flex items-center justify-center" style="background:#fff8e1">
+      <img src="/static/my-logo.png" alt="KAAF" class="w-16 h-16 object-contain pulse">
+    </div>
+    <h1 class="text-2xl font-bold mb-2" style="color:#1a1200">You're offline</h1>
+    <p class="mb-6" style="color:#7a6a40">No internet connection. Some features are still available from cache.</p>
+
+    <div class="space-y-3 mb-8">
+      <a href="/dashboard/" class="flex items-center gap-3 p-4 rounded-2xl text-left transition-all"
+         style="background:#fff;border:1.5px solid #e8e0d0">
+        <span class="text-2xl">🏠</span>
+        <div>
+          <p class="font-semibold text-sm" style="color:#1a1200">Dashboard</p>
+          <p class="text-xs" style="color:#7a6a40">View cached data</p>
+        </div>
+      </a>
+      <a href="/chatbot/" class="flex items-center gap-3 p-4 rounded-2xl text-left transition-all"
+         style="background:#fff;border:1.5px solid #e8e0d0">
+        <span class="text-2xl">🤖</span>
+        <div>
+          <p class="font-semibold text-sm" style="color:#1a1200">AI Chat (Limited)</p>
+          <p class="text-xs" style="color:#7a6a40">Basic responses without AI</p>
+        </div>
+      </a>
+      <a href="/students/results/" class="flex items-center gap-3 p-4 rounded-2xl text-left transition-all"
+         style="background:#fff;border:1.5px solid #e8e0d0">
+        <span class="text-2xl">📊</span>
+        <div>
+          <p class="font-semibold text-sm" style="color:#1a1200">Results</p>
+          <p class="text-xs" style="color:#7a6a40">View cached results</p>
+        </div>
+      </a>
+    </div>
+
+    <button onclick="window.location.reload()"
+            class="px-6 py-3 rounded-xl font-semibold text-white transition-all"
+            style="background:#c88500">
+      Try Again
+    </button>
+  </div>
+</body>
+</html>

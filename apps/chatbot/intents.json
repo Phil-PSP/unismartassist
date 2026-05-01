@@ -195,6 +195,61 @@
       "responses": ["__MORNING_BRIEFING__"]
     },
     {
+      "tag": "university_info",
+      "patterns": ["who founded kaaf", "founder of kaaf", "history of kaaf", "when was kaaf founded", "who started kaaf", "chancellor", "kaaf university history", "about kaaf university", "kaaf university established"],
+      "responses": ["__UNIVERSITY_INFO__"]
+    },
+    {
+      "tag": "gpa_simulator",
+      "patterns": ["gpa simulator", "what if i get", "if i score", "predict my gpa", "gpa prediction", "what grade do i need", "simulate my grades"],
+      "responses": ["__GPA_SIMULATOR__"]
+    },
+    {
+      "tag": "exam_quiz",
+      "patterns": ["quiz me", "practice question", "test me", "exam practice", "give me a question", "practice quiz", "study quiz"],
+      "responses": ["__EXAM_QUIZ__"]
+    },
+    {
+      "tag": "fee_tracker",
+      "patterns": ["fee balance", "my fee balance", "how much do i owe", "fee status", "payment status", "have i paid", "fee tracker"],
+      "responses": ["__FEE_TRACKER__"]
+    },
+    {
+      "tag": "hostel",
+      "patterns": ["hostel", "accommodation", "where to stay", "student housing", "apply for hostel", "hostel application", "dormitory"],
+      "responses": ["__HOSTEL__"]
+    },
+    {
+      "tag": "grade_entry",
+      "patterns": ["enter grade", "update grade", "submit grade", "record grade", "add grade for", "grade entry"],
+      "responses": ["__GRADE_ENTRY__"]
+    },
+    {
+      "tag": "class_comparison",
+      "patterns": ["class average", "how do i compare", "class gpa", "average gpa", "peer comparison", "how am i doing compared"],
+      "responses": ["__CLASS_COMPARISON__"]
+    },
+    {
+      "tag": "conversation_summary",
+      "patterns": ["summarize our conversation", "what did we talk about", "conversation summary", "recap our chat", "what have we discussed"],
+      "responses": ["__CONVERSATION_SUMMARY__"]
+    },
+    {
+      "tag": "daily_challenge",
+      "patterns": ["daily challenge", "challenge me", "brain teaser", "academic challenge", "question of the day"],
+      "responses": ["__DAILY_CHALLENGE__"]
+    },
+    {
+      "tag": "streak_reward",
+      "patterns": ["study streak", "streak reward", "how long is my streak", "streak points", "streak milestone", "my study streak"],
+      "responses": ["__STREAK_REWARD__"]
+    },
+    {
+      "tag": "creator_info",
+      "patterns": ["who built you", "who created you", "who made you", "who developed you", "who is your developer", "who programmed you", "who designed you", "who is behind you"],
+      "responses": ["__CREATOR_INFO__"]
+    },
+    {
       "tag": "unknown",
       "patterns": [],
       "responses": ["I'm not sure I understand. Could you rephrase that?", "Hmm, I didn't catch that. Try asking about your GPA, timetable, results, or type 'help' for options.", "I'm still learning! Could you be more specific? Type 'help' to see all options."]

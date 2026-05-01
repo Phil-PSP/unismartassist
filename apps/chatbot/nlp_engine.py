@@ -15,49 +15,150 @@ from django.conf import settings
 
 UNIVERSITY_KB = {
     "name": "KAAF University",
+    "full_name": "KAAF University (formerly KAAF University College)",
+    "established": "2006 (opened 2008/2009 academic year)",
+    "founder": "Mr. Michael Aidoo (Chancellor) — visionary founder with 40+ years business experience",
+    "chancellor": "Mr. Michael Aidoo",
+    "chancellor_email": "chancellor@kaafuni.edu.gh",
+    "distinction": "First private university in Ghana accredited by GTEC for undergraduate and graduate programmes",
+    "location": "Fetteh Kakraba, Gomoa East District, Central Region, Ghana",
+    "branch": "Accra Campus",
+    "website": "https://kaafuni.edu.gh",
+    "student_portal": "https://kaafuni.edu.gh/student-portal",
+    "admissions_portal": "https://kaafuni.edu.gh/admissions/portal",
+    "type": "Private University",
+    "stats": {
+        "students": "5,000+",
+        "programmes": "31 academic programmes (11+ undergraduate)",
+    },
+    "history": {
+        "2006": "KAAF University College incorporated under Companies Code Act 179 of 1963",
+        "2008-2009": "First academic year. Faculty of Engineering established, then Business (affiliated to KNUST)",
+        "2012": "Student population grew to nearly 1,000. Engineering Faculty had the largest enrolment",
+        "2015": "Health programmes launched, initially affiliated to UDS (University for Development Studies)",
+        "2020": "Law & Political Science introduced, initially affiliated to GIMPA",
+        "2024": "Achieved full university charter — complete academic autonomy, all programmes independent",
+        "2025": "Serves 5,000+ students across 31 programmes as a fully independent chartered university",
+    },
+    "vision": "To be a recognized leader in applied learning and research that enables students to succeed in addressing complex and evolving workplace requirements.",
+    "mission": "To ensure graduates integrate into the workforce with the most up-to-date skills and expert knowledge of the highest standard.",
+    "leadership": {
+        "chancellor": {
+            "name": "Mr. Michael Aidoo",
+            "role": "Chancellor (Founder)",
+            "email": "chancellor@kaafuni.edu.gh",
+            "bio": "Visionary founder with 40+ years of business leadership. Started as a basket weaver and photographer, built enterprises in construction, trading, hospitality, pharmaceuticals, and equipment importation before founding KAAF University.",
+        },
+        "vice_chancellor": {
+            "name": "Dr. Francis Achampong",
+            "role": "Vice Chancellor (CEO)",
+            "email": "francis.achampong@kaafuni.edu.gh",
+            "qualifications": "PhD Civil Engineering",
+            "bio": "Seasoned academic and administrator. Previously served as Rector and Strategic Advisor to the Faculty of Engineering and Computer Science at KAAF. Leads academic governance, student affairs, and quality assurance.",
+        },
+        "registrar": {
+            "name": "Dr. Mrs. Linda Anane Donkor",
+            "role": "Registrar (Chief Administrative Officer)",
+            "email": "registrar@kaafuni.edu.gh",
+            "office": "Mr. Mensah Block, Office 102",
+            "qualifications": "PhD Marketing (UPSA), MBA Marketing, MBA Banking & Finance (Ghana Telecom University)",
+            "bio": "Accomplished higher education administrator. Previously Deputy Registrar (Administration & Academic Affairs) at KAAF. Oversees student records, academic affairs, examinations, and institutional documentation.",
+        },
+    },
     "faculties": [
-        {"name": "Faculty of Business and Management Studies", "code": "FBMS",
-         "departments": ["Accounting", "Business Administration", "Marketing", "Finance",
-                         "Human Resource Management", "Logistics and Supply Chain Management", "Entrepreneurship"]},
-        {"name": "Faculty of Information Technology", "code": "FIT",
-         "departments": ["Computer Science", "Information Technology", "Software Engineering",
-                         "Cybersecurity", "Data Science and Analytics", "Network Engineering"]},
-        {"name": "Faculty of Health Sciences", "code": "FHS",
-         "departments": ["Public Health", "Nursing", "Medical Laboratory Science",
-                         "Pharmacy", "Environmental Health", "Community Health"]},
-        {"name": "Faculty of Education", "code": "FED",
-         "departments": ["Early Childhood Education", "Basic Education", "Educational Administration",
-                         "Guidance and Counseling", "Special Education"]},
-        {"name": "Faculty of Social Sciences and Humanities", "code": "FSSH",
-         "departments": ["Communication Studies", "Sociology", "Political Science",
-                         "Psychology", "Languages and Literature", "History"]},
-        {"name": "Faculty of Law", "code": "FLAW",
-         "departments": ["General Law", "Corporate and Commercial Law", "International Law", "Criminal Law"]},
-        {"name": "Postgraduate School", "code": "PGS",
-         "departments": ["MBA", "MSc programmes", "PhD programmes", "Executive Education"]},
+        {
+            "name": "Faculty of Health and Allied Sciences",
+            "code": "FHAS",
+            "programmes": [
+                {"name": "BSc General Nursing", "duration": "4 years", "credits": 160},
+                {"name": "BSc Midwifery", "duration": "4 years", "credits": 160},
+                {"name": "BSc Public Health Nursing", "duration": "4 years", "credits": 120},
+                {"name": "Doctor of Medical Laboratory Science (MLS.D)", "duration": "6 years", "credits": 235},
+                {"name": "Doctor of Pharmacy (PharmD)", "duration": "6 years", "credits": 235},
+                {"name": "Access Course for Enrolled Nurses", "duration": "6 weeks", "note": "Leads to Level 200 placement"},
+            ]
+        },
+        {
+            "name": "Faculty of Business Administration",
+            "code": "FBA",
+            "programmes": [
+                {"name": "BSc Accounting", "duration": "4 years", "credits": 160},
+                {"name": "BSc Marketing", "duration": "4 years", "credits": 120},
+            ]
+        },
+        {
+            "name": "Faculty of Engineering",
+            "code": "FENG",
+            "programmes": [
+                {"name": "BSc Computer Science", "duration": "4 years", "credits": 120},
+                {"name": "BSc Information Technology", "duration": "4 years", "credits": 120},
+                {"name": "BSc Construction Technology", "duration": "4 years", "credits": 120},
+            ]
+        },
+        {
+            "name": "Faculty of Law and Political Science",
+            "code": "FLPS",
+            "programmes": [
+                {"name": "LLB Law", "duration": "4 years", "credits": 120},
+            ]
+        },
+        {
+            "name": "Postgraduate School",
+            "code": "PGS",
+            "programmes": [
+                {"name": "LLM Taxation and Law", "duration": "12 months"},
+                {"name": "MSc Taxation and Law", "duration": "12 months"},
+                {"name": "MPhil Midwifery", "duration": "2 years"},
+                {"name": "MPhil Nursing", "duration": "2 years"},
+            ]
+        },
     ],
+    "admission_requirements": {
+        "undergraduate": [
+            "WASSCE/SSSCE: Minimum 6 passes including English and Mathematics",
+            "Minimum age: 16 years at time of application",
+            "Application fee: GH¢ 160.00 (non-refundable)",
+            "Documents: Academic certificates, passport photos, birth certificate",
+        ],
+        "postgraduate": [
+            "Bachelor's Degree: Minimum 2.5 GPA or Second Class Lower",
+            "Work Experience: 2+ years for MBA programs",
+            "Research Proposal: Required for PhD programs",
+            "References: 2-3 academic/professional references",
+            "Application fee: GH¢ 260.00",
+        ],
+        "how_to_apply": "Purchase voucher via *887*9# (all networks) or online at kaafuni.edu.gh/admissions/portal",
+    },
+    "fees": {
+        "approximate_annual": "GH¢ 2,100 per academic session (varies by programme)",
+        "application_undergraduate": "GH¢ 160.00",
+        "application_postgraduate": "GH¢ 260.00",
+        "application_short_course": "GH¢ 100.00",
+        "payment_methods": ["MTN Mobile Money (*887*9#)", "Vodafone Cash (*887*9#)", "AirtelTigo (*887*9#)", "Online payment portal"],
+        "note": "Contact Finance Office for current fee schedules. Fees vary by programme.",
+    },
+    "contacts": {
+        "phone": "+233 20775 5313",
+        "general": "info@kaafuni.edu.gh",
+        "admissions": "admissions@kaafuni.edu.gh",
+        "scholarships": "scholarships@kaafuni.edu.gh",
+        "finance": "finance@kaafuni.edu.gh",
+        "registrar": "registrar@kaafuni.edu.gh",
+        "it_support": "itsupport@kaafuni.edu.gh",
+        "health": "health@kaafuni.edu.gh",
+        "counseling": "counseling@kaafuni.edu.gh",
+        "career": "careers@kaafuni.edu.gh",
+        "library": "library@kaafuni.edu.gh",
+    },
+    "payment_methods": ["MTN Mobile Money", "Vodafone Cash", "AirtelTigo Money", "Online Portal"],
+    "crisis_lines": ["Mental Health Authority Ghana: 0800-111-222", "Campus Counselor: +233 20775 5313"],
     "admin_departments": [
         "Office of the Registrar", "Bursary and Finance", "Human Resources",
         "IT Services", "Library and Information Services", "Student Affairs",
         "Health Services", "Security Services", "Facilities and Maintenance",
         "Public Relations and Communications", "Admissions Office",
-        "Academic Affairs", "Research and Innovation", "International Relations",
-        "Career Services and Internship", "Alumni Relations",
+        "Academic Affairs", "Research and Innovation",
     ],
-    "contacts": {
-        "admissions": "admissions@kaaf.edu.gh",
-        "scholarships": "scholarships@kaaf.edu.gh",
-        "finance": "finance@kaaf.edu.gh",
-        "registrar": "registrar@kaaf.edu.gh",
-        "it_support": "itsupport@kaaf.edu.gh",
-        "health": "health@kaaf.edu.gh",
-        "counseling": "counseling@kaaf.edu.gh",
-        "career": "careers@kaaf.edu.gh",
-        "library": "library@kaaf.edu.gh",
-        "general": "info@kaaf.edu.gh",
-    },
-    "payment_methods": ["MTN Mobile Money", "Vodafone Cash", "AirtelTigo Money", "Paystack", "Bank Transfer"],
-    "crisis_lines": ["Mental Health Authority Ghana: 0800-111-222", "Campus Counselor: 0302-XXX-XXX"],
 }
 
 ESCALATION_MATRIX = {
@@ -72,10 +173,29 @@ ESCALATION_MATRIX = {
 }
 
 
-# ─── System Prompt Builder ─────────────────────────────────────────────────────
+# ─── System Prompt Cache ──────────────────────────────────────────────────────
+# Cache prompt per user_id — invalidated when GPA or profile changes
+_prompt_cache = {}  # {user_id: (prompt_str, cache_key)}
+
+def _get_cache_key(user):
+    """Fast cache key based on user data that changes."""
+    try:
+        gpa = str(user.student_profile.cumulative_gpa)
+    except Exception:
+        gpa = '0'
+    return f"{user.id}:{user.points}:{gpa}"
 
 def build_system_prompt(user):
-    """Build a rich, role-aware system prompt for the AI."""
+    """Build a rich, role-aware system prompt for the AI. Cached per user."""
+    cache_key = _get_cache_key(user)
+    if user.id in _prompt_cache and _prompt_cache[user.id][1] == cache_key:
+        return _prompt_cache[user.id][0]
+    prompt = _build_system_prompt_uncached(user)
+    _prompt_cache[user.id] = (prompt, cache_key)
+    return prompt
+
+
+def _build_system_prompt_uncached(user):
     role = user.role
     name = user.get_full_name()
     lang = getattr(user, 'preferred_language', 'English')
@@ -85,7 +205,15 @@ def build_system_prompt(user):
 IDENTITY:
 - You are KAAF AI — friendly, accurate, and always helpful
 - Institution: KAAF University, Ghana
-- Respond in: {lang}. If the user writes in Twi, Ga, Hausa, or Pidgin, match their language.
+- Respond in: {lang}. 
+  - If lang is French: respond entirely in French
+  - If lang is German: respond entirely in German  
+  - If lang is Spanish: respond entirely in Spanish
+  - If lang is Portuguese: respond entirely in Portuguese
+  - If lang is Arabic: respond entirely in Arabic
+  - If lang is Chinese: respond entirely in Chinese (Simplified)
+  - If lang is Twi/Ga/Hausa/Pidgin: respond in that Ghanaian language
+  - If the user writes in ANY language different from their setting, match their language automatically
 
 STRICT RULES — follow these exactly:
 1. Address the user by first name: {user.first_name}
@@ -98,15 +226,72 @@ STRICT RULES — follow these exactly:
 8. Use markdown: **bold** for key info, bullet points for lists, emojis sparingly
 9. End with one short follow-up suggestion when relevant
 
-KAAF UNIVERSITY FACTS:
-- Location: Ghana
-- Faculties: {', '.join(f['code'] + ' (' + f['name'] + ')' for f in UNIVERSITY_KB['faculties'])}
-- Fee payment: {', '.join(UNIVERSITY_KB['payment_methods'])}
-- Key contacts: Finance: {UNIVERSITY_KB['contacts']['finance']} | Admissions: {UNIVERSITY_KB['contacts']['admissions']} | Registrar: {UNIVERSITY_KB['contacts']['registrar']} | IT: {UNIVERSITY_KB['contacts']['it_support']}
-- Scholarship: {UNIVERSITY_KB['contacts']['scholarships']}
-- Fee deadline: End of Week 4 each semester. Late fee: 10% surcharge.
-- Minimum attendance: 70% per course
-- Graduation minimum GPA: 2.0
+KAAF UNIVERSITY FACTS (verified from kaafuni.edu.gh):
+- Full name: KAAF University (formerly KAAF University College)
+- Founded: 2006 by **Mr. Michael Aidoo** (Chancellor) — opened 2008/2009
+- Distinction: First private university in Ghana accredited by GTEC for UG & PG programmes
+- Type: Private University | Students: 5,000+ | Programmes: 31
+- Location: Fetteh Kakraba, Gomoa East District, Central Region, Ghana (branch in Accra)
+- Website: kaafuni.edu.gh | Student Portal: kaafuni.edu.gh/student-portal
+
+HISTORY TIMELINE:
+- 2006: Incorporated under Companies Code Act 179 of 1963
+- 2008/09: First academic year — Faculty of Engineering + Business (affiliated KNUST)
+- 2012: ~1,000 students, Engineering Faculty largest
+- 2015: Health programmes launched (affiliated UDS)
+- 2020: Law & Political Science added (affiliated GIMPA)
+- 2024: Full university charter — complete academic autonomy
+- 2025: 5,000+ students, 31 programmes, fully independent
+
+LEADERSHIP (verified):
+- Chancellor & Founder: Mr. Michael Aidoo | chancellor@kaafuni.edu.gh
+- Vice Chancellor (CEO): Dr. Francis Achampong (PhD Civil Engineering) | francis.achampong@kaafuni.edu.gh
+- Registrar: Dr. Mrs. Linda Anane Donkor (PhD Marketing, UPSA) | registrar@kaafuni.edu.gh | Mr. Mensah Block, Office 102
+
+VISION: To be a recognized leader in applied learning and research that enables students to succeed in addressing complex and evolving workplace requirements.
+MISSION: To ensure graduates integrate into the workforce with the most up-to-date skills and expert knowledge.
+
+IMPORTANT — NEVER fabricate names of staff, founders, or leadership. Only use the verified names above.
+
+ABOUT THIS SYSTEM:
+- This AI chatbot was built by **Philip Qhophi Tetteh N. Gakpetor**, a final year Computer Science student at KAAF University (Faculty of Engineering & Computer Science, Department of Computer Science).
+- When asked "who built you", "who created you", "who made you", or similar — always credit Philip Qhophi Tetteh N. Gakpetor.
+
+FACULTIES & PROGRAMMES:
+1. Faculty of Health and Allied Sciences (FHAS):
+   - BSc General Nursing (4yr, 160 credits)
+   - BSc Midwifery (4yr, 160 credits)
+   - BSc Public Health Nursing (4yr, 120 credits)
+   - Doctor of Medical Laboratory Science MLS.D (6yr, 235 credits)
+   - Doctor of Pharmacy PharmD (6yr, 235 credits)
+   - Access Course for Enrolled Nurses (6 weeks → Level 200 placement)
+2. Faculty of Business Administration (FBA):
+   - BSc Accounting (4yr, 160 credits)
+   - BSc Marketing (4yr, 120 credits)
+3. Faculty of Engineering (FENG):
+   - BSc Computer Science (4yr, 120 credits)
+   - BSc Information Technology (4yr, 120 credits)
+   - BSc Construction Technology (4yr, 120 credits)
+4. Faculty of Law and Political Science (FLPS):
+   - LLB Law (4yr, 120 credits)
+5. Postgraduate School: LLM Taxation & Law (12mo), MSc Taxation & Law (12mo), MPhil Midwifery (2yr), MPhil Nursing (2yr)
+
+ADMISSION:
+- Undergraduate: WASSCE/SSSCE min 6 passes (incl. English & Maths), age 16+, fee GH¢ 160
+- Postgraduate: Min 2.5 GPA / Second Class Lower, fee GH¢ 260
+- How to apply: Dial *887*9# (all networks) or visit kaafuni.edu.gh/admissions/portal
+- Short courses: GH¢ 100 application fee
+
+FEES: ~GH¢ 2,100 per academic session (varies by programme). Contact Finance Office for exact figures.
+Payment: MTN/Vodafone/AirtelTigo via *887*9# or online portal
+
+KEY CONTACTS:
+- Phone: +233 20775 5313
+- General: info@kaafuni.edu.gh
+- Admissions: {UNIVERSITY_KB['contacts']['admissions']}
+- Finance: {UNIVERSITY_KB['contacts']['finance']}
+- Registrar: {UNIVERSITY_KB['contacts']['registrar']}
+- IT Support: {UNIVERSITY_KB['contacts']['it_support']}
 
 ESCALATION:
 - Grade dispute → Course Lecturer → HOD → Academic Affairs
@@ -307,7 +492,7 @@ def call_gemini(system_prompt, conversation_history, user_message):
         'system_instruction': {'parts': [{'text': system_prompt}]},
         'contents': contents,
         'generationConfig': {
-            'maxOutputTokens': 800,
+            'maxOutputTokens': 450,
             'temperature': 0.65,
             'topP': 0.9,
         },
@@ -323,7 +508,7 @@ def call_gemini(system_prompt, conversation_history, user_message):
         url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}'
         req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/json'}, method='POST')
         try:
-            with urllib.request.urlopen(req, timeout=20) as resp:
+            with urllib.request.urlopen(req, timeout=12) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
                 candidates = data.get('candidates', [])
                 if candidates:
@@ -358,9 +543,9 @@ def call_openai(system_prompt, conversation_history, user_message):
 
 
 def get_conversation_history(session):
-    """Get recent conversation turns for AI context."""
+    """Get recent conversation turns for AI context — last 6 turns only."""
     from .models import ChatMessage
-    recent = ChatMessage.objects.filter(session=session).order_by('-timestamp')[:20]
+    recent = ChatMessage.objects.filter(session=session).order_by('-timestamp')[:6]
     history = []
     for msg in reversed(list(recent)):
         role = 'user' if msg.sender == 'user' else 'assistant'
@@ -453,9 +638,10 @@ class ChatbotEngine:
 
 Type anything and I'll do my best to help!"""
 
-    def __init__(self, user, session=None):
+    def __init__(self, user, session=None, offline=False):
         self.user = user
         self.session = session
+        self.offline = offline
         self.nlp = NLPEngine()
 
     def process(self, message, session_context=None):
@@ -502,6 +688,7 @@ Type anything and I'll do my best to help!"""
             'staff_info': self._handle_staff_info,
             'attendance': self._handle_attendance,
             'exam_info': self._handle_exam_info,
+            'university_info': self._handle_university_info,
             # New handlers
             'exam_countdown': self._handle_exam_countdown,
             'course_registration': self._handle_course_registration,
@@ -511,18 +698,32 @@ Type anything and I'll do my best to help!"""
             'study_buddy': self._handle_study_buddy,
             'leaderboard': self._handle_leaderboard,
             'morning_briefing': self._handle_morning_briefing,
+            # New features
+            'gpa_simulator': self._handle_gpa_simulator,
+            'exam_quiz': self._handle_exam_quiz,
+            'fee_tracker': self._handle_fee_tracker,
+            'hostel': self._handle_hostel,
+            'grade_entry': self._handle_grade_entry,
+            'class_comparison': self._handle_class_comparison,
+            'conversation_summary': self._handle_conversation_summary,
+            'daily_challenge': self._handle_daily_challenge,
+            'streak_reward': self._handle_streak_reward,
+            'creator_info': self._handle_creator_info,
         }
 
         if tag in handlers:
             response_data = handlers[tag](entities, session_context)
         else:
-            # unknown intent or low-confidence match — try AI first
-            ai_response = self._try_ai_fallback(message, session_context)
-            if ai_response:
-                response_data = {'response': ai_response, 'data': {}, 'mode': 'general', 'ai_powered': True}
+            if self.offline:
+                # Offline — give a helpful local response without calling AI
+                response_data = self._handle_offline_unknown(message)
             else:
-                response_text = self.nlp.get_response(intent)
-                response_data = {'response': response_text, 'data': {}}
+                # unknown intent or low-confidence match — try AI first
+                ai_response = self._try_ai_fallback(message, session_context)
+                if ai_response:
+                    response_data = {'response': ai_response, 'data': {}, 'mode': 'general', 'ai_powered': True}
+                else:
+                    response_data = {'response': self._offline_fallback_text(message), 'data': {}}
 
         response_data['intent'] = tag
         response_data['confidence'] = round(confidence, 2)
@@ -553,6 +754,8 @@ Type anything and I'll do my best to help!"""
 
     def _try_ai_fallback(self, message, session_context):
         """Use Gemini as the AI brain with full live context injected."""
+        if self.offline:
+            return None
         try:
             system_prompt = build_system_prompt(self.user)
             history = get_conversation_history(self.session) if self.session else []
@@ -560,6 +763,44 @@ Type anything and I'll do my best to help!"""
                    call_openai(system_prompt, history, message)
         except Exception:
             return None
+
+    def _handle_offline_unknown(self, message):
+        """Helpful response when offline and intent not recognized."""
+        return {
+            'response': self._offline_fallback_text(message),
+            'data': {}, 'mode': 'general'
+        }
+
+    def _offline_fallback_text(self, message):
+        """Generate a useful offline response based on keywords in the message."""
+        msg = message.lower()
+        name = self.user.first_name
+
+        # Try to give a relevant local response based on keywords
+        if any(w in msg for w in ['gpa', 'grade', 'result', 'score']):
+            return f"📊 You asked about your grades, {name}. Type **'what is my gpa'** or **'show my results'** for your academic data — those work offline!"
+        if any(w in msg for w in ['class', 'lecture', 'timetable', 'schedule']):
+            return f"📅 Type **'show my timetable'** to see your schedule, {name} — that works offline!"
+        if any(w in msg for w in ['task', 'todo', 'planner', 'assignment']):
+            return f"📋 Type **'my tasks'** to see your planner, {name} — available offline!"
+        if any(w in msg for w in ['motivat', 'inspire', 'encourage']):
+            return self._handle_motivation({}, {})['response']
+        if any(w in msg for w in ['stress', 'anxious', 'overwhelm', 'tired']):
+            return self._handle_meditation({}, {})['response']
+        if any(w in msg for w in ['study', 'learn', 'exam', 'test']):
+            return self._handle_study_tips({}, {})['response']
+
+        # Generic offline message
+        return (
+            f"📡 I'm in offline mode, {name}. My AI brain needs internet, but I can still help with:\n\n"
+            f"• **'what is my gpa'** — Your GPA\n"
+            f"• **'show my timetable'** — Today's classes\n"
+            f"• **'my tasks'** — Planner tasks\n"
+            f"• **'motivate me'** — Inspiration\n"
+            f"• **'study tips'** — Study advice\n"
+            f"• **'help'** — Full command list\n\n"
+            f"Your message has been queued and will get a full AI response when you're back online! 🔄"
+        )
 
     def _get_live_context(self):
         """Gather live user data to inject into AI context."""
@@ -850,18 +1091,20 @@ Type anything and I'll do my best to help!"""
         return {'response': response, 'data': {}, 'mode': 'academic'}
 
     def _handle_fees(self, entities, context):
+        fees = UNIVERSITY_KB['fees']
         response = (
-            f"💰 **Fee Information at KAAF University**\n\n"
-            f"**Payment Methods:**\n"
-            + '\n'.join(f"• {m}" for m in UNIVERSITY_KB['payment_methods']) +
-            f"\n\n**Important Deadlines:**\n"
-            f"• Fees must be paid before the end of **Week 4** each semester\n"
-            f"• Late payment attracts a **10% surcharge**\n"
-            f"• Financial clearance required for exams and graduation\n\n"
-            f"**Payment Plans:** Installment plans available — contact Finance Office\n\n"
-            f"📧 **Finance Office:** {UNIVERSITY_KB['contacts']['finance']}\n"
-            f"📍 Admin Block, Ground Floor\n\n"
-            f"💡 Log in to the student portal to check your outstanding balance."
+            f"💰 **Fee Information — KAAF University**\n\n"
+            f"**Approximate Fees:**\n"
+            f"• Tuition: {fees['approximate_annual']}\n"
+            f"• Undergraduate application: {fees['application_undergraduate']}\n"
+            f"• Postgraduate application: {fees['application_postgraduate']}\n"
+            f"• Short course application: {fees['application_short_course']}\n\n"
+            f"**How to Pay:**\n"
+            + '\n'.join(f"• {m}" for m in fees['payment_methods']) +
+            f"\n\n**Note:** {fees['note']}\n\n"
+            f"📞 **Finance Office:** {UNIVERSITY_KB['contacts']['phone']}\n"
+            f"📧 {UNIVERSITY_KB['contacts']['finance']}\n\n"
+            f"💡 Log in to the student portal to check your outstanding balance: kaafuni.edu.gh/student-portal"
         )
         return {'response': response, 'data': {}, 'mode': 'academic'}
 
@@ -894,22 +1137,24 @@ Type anything and I'll do my best to help!"""
         return {'response': response, 'data': {}, 'mode': 'academic'}
 
     def _handle_admissions(self, entities, context):
+        reqs = UNIVERSITY_KB['admission_requirements']
         response = (
             f"🏫 **Admissions at KAAF University**\n\n"
-            f"**Entry Requirements:**\n"
-            f"• WASSCE/SSSCE with minimum grades (varies by programme)\n"
-            f"• HND holders may qualify for direct entry to Level 200/300\n"
-            f"• Postgraduate: First degree with minimum Second Class Lower\n\n"
-            f"**Application Process:**\n"
-            f"1. Visit the KAAF University website or Admissions Office\n"
-            f"2. Complete the online application form\n"
-            f"3. Upload required documents (certificates, ID, passport photo)\n"
-            f"4. Pay application fee\n"
-            f"5. Track your application status online\n\n"
-            f"**Available Programmes:**\n"
-            + '\n'.join(f"• {f['name']} ({f['code']})" for f in UNIVERSITY_KB['faculties']) +
-            f"\n\n📧 **Admissions Office:** {UNIVERSITY_KB['contacts']['admissions']}\n\n"
-            f"💡 Book a campus tour to see KAAF University in person!"
+            f"**Location:** {UNIVERSITY_KB['location']}\n\n"
+            f"**Undergraduate Requirements:**\n"
+            + '\n'.join(f"• {r}" for r in reqs['undergraduate']) +
+            f"\n\n**How to Apply:**\n"
+            f"• {reqs['how_to_apply']}\n"
+            f"• Or visit: kaafuni.edu.gh/admissions/portal\n\n"
+            f"**Available Programmes (11+):**\n"
+            f"• FHAS: BSc Nursing, Midwifery, Public Health Nursing, PharmD, MLS.D\n"
+            f"• FBA: BSc Accounting, BSc Marketing\n"
+            f"• FENG: BSc Computer Science, IT, Construction Technology\n"
+            f"• FLPS: LLB Law\n"
+            f"• Postgraduate: LLM, MSc, MPhil programmes\n\n"
+            f"📞 **Admissions Office:** {UNIVERSITY_KB['contacts']['phone']}\n"
+            f"📧 {UNIVERSITY_KB['contacts']['admissions']}\n\n"
+            f"💡 Book a campus visit or apply online today!"
         )
         return {'response': response, 'data': {}, 'mode': 'general'}
 
@@ -956,22 +1201,21 @@ Type anything and I'll do my best to help!"""
         return {'response': response, 'data': {}, 'mode': 'general'}
 
     def _handle_contact(self, entities, context):
-        lines = [f"📞 **KAAF University Key Contacts:**\n"]
-        contact_labels = {
-            'admissions': '🏫 Admissions Office',
-            'scholarships': '🎓 Scholarships',
-            'finance': '💰 Finance / Bursary',
-            'registrar': '📋 Registrar',
-            'it_support': '💻 IT Support',
-            'health': '🏥 Health Center',
-            'counseling': '🧘 Counseling',
-            'career': '💼 Career Services',
-            'library': '📚 Library',
-            'general': '📧 General Enquiries',
-        }
-        for key, label in contact_labels.items():
-            lines.append(f"• {label}: {UNIVERSITY_KB['contacts'][key]}")
-        lines.append("\n💡 For urgent matters, visit the relevant office in person at the Admin Block.")
+        c = UNIVERSITY_KB['contacts']
+        lines = [f"📞 **KAAF University Contacts:**\n",
+                 f"• 📱 Main Phone: {UNIVERSITY_KB['contacts']['phone']}",
+                 f"• 📧 General: {c['general']}",
+                 f"• 🏫 Admissions: {c['admissions']}",
+                 f"• 💰 Finance: {c['finance']}",
+                 f"• 📋 Registrar: {c['registrar']}",
+                 f"• 💻 IT Support: {c['it_support']}",
+                 f"• 🏥 Health: {c['health']}",
+                 f"• 🧘 Counseling: {c['counseling']}",
+                 f"• 💼 Career: {c['career']}",
+                 f"• 📚 Library: {c['library']}",
+                 f"\n📍 **Location:** {UNIVERSITY_KB['location']}",
+                 f"🌐 **Website:** kaafuni.edu.gh",
+                 f"\n💡 For urgent matters, call +233 20775 5313 or visit the Admin Block."]
         return {'response': '\n'.join(lines), 'data': {}, 'mode': 'general'}
 
     def _handle_staff_info(self, entities, context):
@@ -1008,6 +1252,27 @@ Type anything and I'll do my best to help!"""
         except Exception:
             tips = random.sample(self.STUDY_TIPS, 3)
             return {'response': f"📈 **Tips to Improve Your GPA:**\n\n" + '\n'.join(f"• {t}" for t in tips), 'data': {}}
+
+    def _handle_university_info(self, entities, context):
+        kb = UNIVERSITY_KB
+        leaders = kb['leadership']
+        history = kb['history']
+        response = (
+            f"🏛️ **KAAF University — Full Profile**\n\n"
+            f"**Founded:** 2006 by **{leaders['chancellor']['name']}** | Opened: 2008/2009\n"
+            f"**Type:** Private University | **Students:** {kb['stats']['students']} | **Programmes:** {kb['stats']['programmes']}\n"
+            f"**Location:** {kb['location']}\n"
+            f"**Distinction:** {kb['distinction']}\n\n"
+            f"**Vision:** _{kb['vision']}_\n\n"
+            f"**History Timeline:**\n"
+            + '\n'.join(f"• **{yr}:** {event}" for yr, event in history.items()) +
+            f"\n\n**Leadership:**\n"
+            f"• 🎓 **Chancellor & Founder:** {leaders['chancellor']['name']} | {leaders['chancellor']['email']}\n"
+            f"• 🏫 **Vice Chancellor:** {leaders['vice_chancellor']['name']} ({leaders['vice_chancellor']['qualifications']}) | {leaders['vice_chancellor']['email']}\n"
+            f"• 📋 **Registrar:** {leaders['registrar']['name']} ({leaders['registrar']['qualifications']}) | {leaders['registrar']['email']}\n\n"
+            f"🌐 kaafuni.edu.gh | 📞 {kb['contacts']['phone']}"
+        )
+        return {'response': response, 'data': {}, 'mode': 'general'}
 
     def _handle_help(self, entities, context):
         return {'response': self.HELP_TEXT.format(name=self.user.first_name), 'data': {}, 'mode': 'general'}
@@ -1277,6 +1542,203 @@ Type anything and I'll do my best to help!"""
         except Exception:
             return {'response': f"Good morning, {self.user.first_name}! Have a productive day! 💪", 'data': {}}
 
+    # ── New Feature Handlers ───────────────────────────────────────────────────
+
+    def _handle_creator_info(self, entities, context):
+        return {
+            'response': (
+                "👨‍💻 **I was built by Philip Qhophi Tetteh N. Gakpetor**\n\n"
+                "Philip is a final year **Computer Science** student at KAAF University, "
+                "Faculty of Engineering & Computer Science, Department of Computer Science.\n\n"
+                "He developed this AI-powered campus assistant as part of his final year project — "
+                "combining Django, Gemini AI, WebSockets, and a full university management system "
+                "to create a smart, personalized academic companion for KAAF students and staff.\n\n"
+                "🎓 Proud product of KAAF University!"
+            ),
+            'data': {}, 'mode': 'general'
+        }
+
+    def _handle_gpa_simulator(self, entities, context):
+        """Simulate GPA with hypothetical grades."""
+        try:
+
+            GRADE_POINTS = {'A+': 4.0, 'A': 4.0, 'B+': 3.5, 'B': 3.0, 'C+': 2.5, 'C': 2.0, 'D+': 1.5, 'D': 1.0, 'F': 0.0}
+            scenarios = [
+                ('All A+ (90-100)', 4.0), ('All A (80-89)', 4.0),
+                ('All B+ (75-79)', 3.5), ('All B (70-74)', 3.0),
+                ('All C (60-64)', 2.0), ('All D (50-54)', 1.0),
+            ]
+            total_credits = sum(r.course.credit_hours for r in courses)
+            existing = list(profile.results.select_related('course').exclude(
+                course__in=[r.course for r in courses]
+            ))
+            existing_points = sum(float(r.grade_points) * r.course.credit_hours for r in existing)
+            existing_credits = sum(r.course.credit_hours for r in existing)
+            lines = [f"📊 **GPA Simulator for {self.user.first_name}**\n",
+                     f"Current GPA: **{profile.cumulative_gpa}** | Semester credits: {total_credits}\n",
+                     f"**If you get these grades this semester:**\n"]
+            for label, gp in scenarios:
+                sem_points = gp * total_credits
+                new_total_points = existing_points + sem_points
+                new_total_credits = existing_credits + total_credits
+                projected = round(new_total_points / new_total_credits, 2) if new_total_credits > 0 else gp
+                diff = projected - float(profile.cumulative_gpa)
+                arrow = "📈" if diff > 0 else "📉" if diff < 0 else "➡️"
+                lines.append(f"• {label}: **{projected:.2f}** {arrow} ({'+' if diff >= 0 else ''}{diff:.2f})")
+            lines.append(f"\n💡 Type **'improve my GPA'** for personalized study tips!")
+            return {'response': '\n'.join(lines), 'data': {}, 'mode': 'academic'}
+        except Exception:
+            return {'response': "I need your course registrations to simulate your GPA.", 'data': {}}
+
+    def _handle_exam_quiz(self, entities, context):
+        try:
+            profile = self.user.student_profile
+            courses = list(profile.registrations.filter(
+                is_active=True, academic_year=profile.academic_year
+            ).values_list('course__name', flat=True))
+            if not courses:
+                return {'response': f"Register for courses first, {self.user.first_name}, then I can quiz you!", 'data': {}}
+            import random as _r
+            course = _r.choice(courses)
+            prompt = (f"Generate ONE multiple-choice practice question for a university student studying {course}. "
+                      f"Format: Question, then options A) B) C) D), then 'Answer:' on a new line. Keep it undergraduate level.")
+            question = call_gemini("You are an academic quiz generator for KAAF University students.", [], prompt)
+            if question:
+                return {'response': f"📝 **Practice Question — {course}:**\n\n{question}\n\n💡 Type **'quiz me'** for another!", 'data': {}, 'mode': 'academic'}
+            return {'response': "Couldn't generate a question right now. Try again!", 'data': {}}
+        except Exception:
+            return {'response': "Couldn't generate a quiz question. Try again!", 'data': {}}
+
+    def _handle_fee_tracker(self, entities, context):
+        response = (
+            f"💰 **Fee Status for {self.user.first_name}:**\n\n"
+            f"To check your exact fee balance:\n"
+            f"1. Log in to: **kaafuni.edu.gh/student-portal**\n"
+            f"2. Navigate to **Finance → Fee Balance**\n\n"
+            f"**Payment:** Dial **\\*887\\*9#** on any network\n"
+            f"**Deadline:** End of Week 4 each semester\n\n"
+            f"📞 {UNIVERSITY_KB['contacts']['phone']} | 📧 {UNIVERSITY_KB['contacts']['finance']}"
+        )
+        return {'response': response, 'data': {}, 'mode': 'academic'}
+
+    def _handle_hostel(self, entities, context):
+        response = (
+            f"🏠 **Accommodation at KAAF University, {self.user.first_name}:**\n\n"
+            f"KAAF University offers on-campus accommodation.\n\n"
+            f"**How to Apply:** Visit the Student Affairs Office\n"
+            f"**Includes:** Modern housing, 24/7 security, study rooms\n\n"
+            f"📞 {UNIVERSITY_KB['contacts']['phone']} | 📧 {UNIVERSITY_KB['contacts']['general']}\n\n"
+            f"💡 Apply early — spaces are limited!"
+        )
+        return {'response': response, 'data': {}, 'mode': 'academic'}
+
+    def _handle_grade_entry(self, entities, context):
+        if self.user.is_staff_member or self.user.is_admin:
+            response = (
+                f"📝 **Grade Entry, {self.user.first_name}:**\n\n"
+                f"**Via Admin Panel → Results:**\n"
+                f"• Select student and course, enter score (0-100)\n"
+                f"• Grade auto-calculated | Students notified automatically\n"
+                f"• Bulk upload via CSV also available\n\n"
+                f"**Grade Scale:** A+(90+)=4.0 | A(80+)=4.0 | B+(75+)=3.5 | B(70+)=3.0 | C+(65+)=2.5 | C(60+)=2.0 | D+(55+)=1.5 | D(50+)=1.0 | F=0.0"
+            )
+        else:
+            response = f"Grade entry is only available to staff and administrators, {self.user.first_name}."
+        return {'response': response, 'data': {}, 'mode': 'academic'}
+
+    def _handle_class_comparison(self, entities, context):
+        try:
+            from apps.students.models import StudentProfile
+            profile = self.user.student_profile
+            my_gpa = float(profile.cumulative_gpa)
+            classmates = StudentProfile.objects.filter(
+                programme=profile.programme, level=profile.level,
+                academic_year=profile.academic_year,
+            ).exclude(user=self.user)
+            if classmates.exists():
+                gpas = [float(c.cumulative_gpa) for c in classmates if float(c.cumulative_gpa) > 0]
+                if gpas:
+                    avg = round(sum(gpas) / len(gpas), 2)
+                    diff = round(my_gpa - avg, 2)
+                    rank = sum(1 for g in gpas if g > my_gpa) + 1
+                    total = len(gpas) + 1
+                    percentile = round((1 - rank / total) * 100)
+                    status = "above" if diff > 0 else "below" if diff < 0 else "at"
+                    emoji = "🏆" if diff >= 0.5 else "📈" if diff > 0 else "💪" if diff > -0.3 else "📉"
+                    response = (
+                        f"📊 **Class Comparison for {self.user.first_name}:**\n\n"
+                        f"• Your GPA: **{my_gpa:.2f}** | Class Average: **{avg:.2f}**\n"
+                        f"• You are **{abs(diff):.2f} pts {status}** average {emoji}\n"
+                        f"• Rank: **#{rank} of {total}** | Top **{percentile}%**\n\n"
+                    )
+                    if diff >= 0.5: response += "🌟 Excellent! Significantly above average!"
+                    elif diff > 0: response += "👍 Above average. Keep pushing!"
+                    elif diff > -0.3: response += "💪 Close to average. A little more effort!"
+                    else: response += "📚 Below average. Type **'improve my GPA'** for tips!"
+                    response += "\n\n💡 All comparisons are anonymized."
+                    return {'response': response, 'data': {}, 'mode': 'academic'}
+            return {'response': f"Not enough classmates in the system yet, {self.user.first_name}.", 'data': {}}
+        except Exception:
+            return {'response': "Couldn't load class comparison data.", 'data': {}}
+
+    def _handle_conversation_summary(self, entities, context):
+        try:
+            if not self.session:
+                return {'response': "No conversation to summarize yet!", 'data': {}}
+            history = get_conversation_history(self.session)
+            if len(history) < 2:
+                return {'response': "We've barely started! Ask me something first.", 'data': {}}
+            convo_text = '\n'.join(f"{t['role'].upper()}: {t['content']}" for t in history)
+            summary = call_gemini("Summarize conversations concisely.", [], f"Summarize in 3-4 bullet points:\n\n{convo_text}")
+            if summary:
+                return {'response': f"📋 **Conversation Summary:**\n\n{summary}", 'data': {}, 'mode': 'general'}
+            return {'response': "Couldn't generate a summary right now.", 'data': {}}
+        except Exception:
+            return {'response': "Couldn't summarize the conversation.", 'data': {}}
+
+    def _handle_daily_challenge(self, entities, context):
+        try:
+            profile = self.user.student_profile
+            courses = list(profile.registrations.filter(
+                is_active=True, academic_year=profile.academic_year
+            ).values_list('course__name', flat=True))
+            import random as _r
+            subject = _r.choice(courses) if courses else "General Knowledge"
+            prompt = (f"Create a short daily academic challenge for a Level {profile.level} student studying {subject}. "
+                      f"Include the answer marked 'Answer:'. Keep it fun and educational.")
+            challenge = call_gemini("You are an academic challenge creator for university students.", [], prompt)
+            if challenge:
+                return {'response': f"🎯 **Daily Challenge — {subject}:**\n\n{challenge}\n\n💡 Type **'quiz me'** for more practice!", 'data': {}, 'mode': 'academic'}
+            fallbacks = [
+                "🎯 If a student scores 78, 85, 62, 91 in four 3-credit courses, what is their GPA?\n\n*Answer: 3.0*",
+                "🎯 What is the minimum GPA to graduate from KAAF University?\n\n*Answer: 2.0*",
+                "🎯 What is the minimum attendance required per course at KAAF?\n\n*Answer: 70%*",
+            ]
+            return {'response': _r.choice(fallbacks) + "\n\n💡 Type **'quiz me'** for more!", 'data': {}, 'mode': 'academic'}
+        except Exception:
+            return {'response': "🎯 **Challenge:** What year was KAAF University founded?\n\n*Answer: 2006*", 'data': {}}
+
+    def _handle_streak_reward(self, entities, context):
+        streak = self.user.study_streak
+        points = self.user.points
+        if streak >= 30: badge, msg = "🏆 Legend", "30+ day streak is extraordinary!"
+        elif streak >= 14: badge, msg = "🔥 On Fire", "Two weeks straight! You're on fire!"
+        elif streak >= 7: badge, msg = "⭐ Consistent", "One full week! Consistency is key!"
+        elif streak >= 3: badge, msg = "💪 Building", "3 days in! Keep the momentum!"
+        elif streak >= 1: badge, msg = "🌱 Starting", "You've started! Keep it going tomorrow!"
+        else: badge, msg = "😴 Inactive", "Start your streak today by completing a task!"
+        milestones = [3, 7, 14, 30, 60, 100]
+        next_m = next((m for m in milestones if m > streak), None)
+        response = (
+            f"🔥 **Study Streak — {self.user.first_name}:**\n\n"
+            f"• Streak: **{streak} day{'s' if streak != 1 else ''}** {badge}\n"
+            f"• Points: **{points} pts**\n\n{msg}\n\n"
+        )
+        if next_m:
+            response += f"**Next milestone:** {next_m} days ({next_m - streak} more!)\n\n"
+        response += "**Maintain streak:** Complete tasks, use Study Timer, or chat with KAAF AI!\n\n💡 Check the **Leaderboard** to see your rank!"
+        return {'response': response, 'data': {}, 'mode': 'motivation'}
+
 
 # ── Conversation Memory ────────────────────────────────────────────────────────
 
@@ -1285,9 +1747,7 @@ def update_user_memory(user, session):
     try:
         from apps.accounts.models import UserMemory
         from apps.students.models import Result
-
         memory, _ = UserMemory.objects.get_or_create(user=user)
-
         if user.is_student:
             profile = user.student_profile
             results = list(Result.objects.filter(student=profile).select_related('course').order_by('grade_points'))
@@ -1295,23 +1755,15 @@ def update_user_memory(user, session):
             strong = [r.course.name for r in reversed(results) if r.grade_points and float(r.grade_points) >= 3.5][:3]
             memory.weak_subjects = weak
             memory.strong_subjects = strong
-
-            # Mood trend
             from apps.accounts.models import MoodCheckIn
             recent_moods = list(MoodCheckIn.objects.filter(user=user).order_by('-created_at')[:5].values_list('mood', flat=True))
             if len(recent_moods) >= 2:
-                if recent_moods[0] > recent_moods[-1]:
-                    memory.mood_trend = 'improving'
-                elif recent_moods[0] < recent_moods[-1]:
-                    memory.mood_trend = 'declining'
-                else:
-                    memory.mood_trend = 'stable'
-
+                if recent_moods[0] > recent_moods[-1]: memory.mood_trend = 'improving'
+                elif recent_moods[0] < recent_moods[-1]: memory.mood_trend = 'declining'
+                else: memory.mood_trend = 'stable'
             memory.summary = (
-                f"Student {user.get_full_name()} ({user.user_id}), "
-                f"Level {profile.level}, GPA {profile.cumulative_gpa}. "
-                f"Weak: {', '.join(weak) or 'none'}. "
-                f"Strong: {', '.join(strong) or 'none'}. "
+                f"Student {user.get_full_name()} ({user.user_id}), Level {profile.level}, GPA {profile.cumulative_gpa}. "
+                f"Weak: {', '.join(weak) or 'none'}. Strong: {', '.join(strong) or 'none'}. "
                 f"Streak: {user.study_streak} days. Points: {user.points}."
             )
             memory.save()

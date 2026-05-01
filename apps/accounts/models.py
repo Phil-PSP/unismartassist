@@ -53,12 +53,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Preferences
     LANGUAGE_CHOICES = [
         ('English', 'English'),
-        ('Twi', 'Twi'),
+        ('Twi', 'Twi (Akan)'),
         ('Ga', 'Ga'),
         ('Hausa', 'Hausa'),
         ('Pidgin', 'Pidgin'),
+        ('French', 'French (Français)'),
+        ('German', 'German (Deutsch)'),
+        ('Spanish', 'Spanish (Español)'),
+        ('Portuguese', 'Portuguese (Português)'),
+        ('Arabic', 'Arabic (العربية)'),
+        ('Chinese', 'Chinese (中文)'),
     ]
     preferred_language = models.CharField(max_length=20, choices=LANGUAGE_CHOICES, default='English')
+
+    # MFA
+    mfa_enabled = models.BooleanField(default=False)
+    mfa_secret = models.CharField(max_length=6, blank=True)
+    mfa_secret_expires = models.DateTimeField(null=True, blank=True)
 
     objects = UserManager()
 

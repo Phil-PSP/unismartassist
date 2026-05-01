@@ -1,5 +1,13 @@
 """Celery tasks for student app"""
-from celery import shared_task
+try:
+    from celery import shared_task
+except ImportError:
+    def shared_task(func=None, **kwargs):
+        if func is not None:
+            return func
+        def decorator(f):
+            return f
+        return decorator
 
 
 @shared_task

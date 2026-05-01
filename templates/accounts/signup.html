@@ -107,6 +107,25 @@
             <input name="phone" type="tel" class="form-input" value="{{ form.phone.value|default:'' }}" placeholder="+233 XX XXX XXXX">
           </div>
 
+          <!-- Preferred Language -->
+          <div>
+            <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Preferred Language</label>
+            <select name="preferred_language" class="form-input">
+              <option value="English">🇬🇧 English</option>
+              <option value="French">🇫🇷 French (Français)</option>
+              <option value="German">🇩🇪 German (Deutsch)</option>
+              <option value="Spanish">🇪🇸 Spanish (Español)</option>
+              <option value="Portuguese">🇵🇹 Portuguese (Português)</option>
+              <option value="Arabic">🇸🇦 Arabic (العربية)</option>
+              <option value="Chinese">🇨🇳 Chinese (中文)</option>
+              <option value="Twi">🇬🇭 Twi (Akan)</option>
+              <option value="Ga">🇬🇭 Ga</option>
+              <option value="Hausa">🇬🇭 Hausa</option>
+              <option value="Pidgin">🇬🇭 Pidgin</option>
+            </select>
+            <p class="text-[10px] mt-0.5" style="color:var(--muted)">The AI chatbot will respond in this language</p>
+          </div>
+
           <!-- Programme -->
           <div>
             <label class="block text-xs font-semibold mb-1" style="color:var(--text)">Programme of Study</label>
@@ -127,7 +146,7 @@
                 <option value="">BSc Midwifery</option>
                 <option value="">BSc Public Health Nursing</option>
                 <option value="">Doctor of Medical Laboratory Science</option>
-                <option value="">Doctor of Pharmacy (PharmD)</option>
+                <option value="">Doctor of Pharmacy </option>
               </optgroup>
               <optgroup label="Faculty of Business Administration">
                 <option value="">BSc Accounting</option>
@@ -214,7 +233,7 @@
         </form>
       </div>
 
-      <p class="text-center text-xs mt-4" style="color:var(--muted)">© 2025 KAAF University · All rights reserved</p>
+      <p class="text-center text-xs mt-4" style="color:var(--muted)">© {% now "Y" %} KAAF University · All rights reserved</p>
     </div>
   </div>
 </div>

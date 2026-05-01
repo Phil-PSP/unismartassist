@@ -375,18 +375,55 @@ function chatApp() {
 
       const payload = { message: msg, session_id: SESSION_ID };
 
+      // Offline — queue and respond locally
+      if (!navigator.onLine) {
+        this._queueOfflineMessage(msg);
+        setTimeout(() => {
+          this.isTyping = false;
+          this.addMessage('bot', "⚠️ You're offline. Your message has been queued and will send when you reconnect. Try asking about your GPA, timetable, or type **help**.");
+        }, 600);
+        return;
+      }
+
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify(payload));
+        this.ws.send(JSON.stringify({ ...payload, offline: !navigator.onLine }));
       } else {
-        // HTTP fallback — always uses SESSION_ID
         fetch('/chatbot/send/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ ...payload, offline: !navigator.onLine })
         })
         .then(r => r.json())
-        .then(data => { this.isTyping = false; this.addMessage('bot', data.response, data.message_id); })
-        .catch(() => { this.isTyping = false; this.addMessage('bot', 'Sorry, something went wrong. Please try again.'); });
+        .then(data => {
+          this.isTyping = false;
+          this.addMessage('bot', data.response, data.message_id);
+        })
+        .catch(() => {
+          this.isTyping = false;
+          this._queueOfflineMessage(msg);
+          this.addMessage('bot', "⚠️ Connection lost. Message queued for when you reconnect.");
+        });
+      }
+    },
+
+    _queueOfflineMessage(msg) {
+      const open = indexedDB.open('kaaf-offline', 1);
+      open.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('message-queue')) {
+          db.createObjectStore('message-queue', { keyPath: 'id', autoIncrement: true });
+        }
+      };
+      open.onsuccess = e => {
+        const db = e.target.result;
+        const tx = db.transaction('message-queue', 'readwrite');
+        tx.objectStore('message-queue').add({
+          message: msg, session_id: SESSION_ID,
+          csrf: CSRF_TOKEN, timestamp: Date.now(),
+        });
+      };
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        navigator.serviceWorker.ready.then(sw => sw.sync.register('sync-messages'));
       }
     },
 

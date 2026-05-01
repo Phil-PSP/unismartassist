@@ -270,3 +270,59 @@ def send_exam_countdown_alerts():
                     message=f"{exam.title} is {label} ({exam.date.strftime('%B %d')}). Location: {exam.location or 'TBA'}. Good luck! 📚",
                     notification_type='exam',
                 )
+
+
+@shared_task
+def send_daily_challenge():
+    """Send a daily academic challenge to all active students."""
+    from apps.accounts.models import User
+    from apps.students.models import StudentProfile
+    from .models import Notification
+    import random
+
+    students = User.objects.filter(role='student', is_active=True)
+    challenges = [
+        ("📐 Math Challenge", "If a student scores 78, 85, 62, and 91 in four 3-credit courses, what is their semester GPA? (Answer: 3.0)"),
+        ("📚 KAAF Fact", "What is the minimum GPA required to graduate from KAAF University? (Answer: 2.0)"),
+        ("⏰ Study Tip", "The Pomodoro Technique: Study for 25 minutes, then take a 5-minute break. Try it today!"),
+        ("🧠 Critical Thinking", "Name 3 ways technology has changed education in Ghana in the last 10 years."),
+        ("📊 Statistics", "If 60% of 200 students pass an exam, how many students failed? (Answer: 80 students)"),
+        ("🌍 General Knowledge", "What year did Ghana gain independence? (Answer: 1957, March 6th)"),
+        ("💡 Career Tip", "LinkedIn has 900M+ users. Is your profile ready for the job market?"),
+    ]
+    title, message = random.choice(challenges)
+    for student in students:
+        Notification.objects.create(
+            user=student, title=f"🎯 {title}",
+            message=message + " Type 'daily challenge' in the chatbot for more!",
+            notification_type='motivation',
+        )
+
+
+@shared_task
+def check_streak_milestones():
+    """Send congratulations when students hit streak milestones."""
+    from apps.accounts.models import User
+    from .models import Notification
+
+    milestones = {3: "3-day", 7: "7-day", 14: "14-day", 30: "30-day", 60: "60-day", 100: "100-day"}
+    students = User.objects.filter(role='student', is_active=True)
+
+    for student in students:
+        streak = student.study_streak
+        if streak in milestones:
+            already_sent = Notification.objects.filter(
+                user=student, title__contains=f"{milestones[streak]} streak"
+            ).exists()
+            if not already_sent:
+                bonus = streak * 5
+                student.add_points(bonus, f'{milestones[streak]} streak milestone')
+                Notification.objects.create(
+                    user=student,
+                    title=f"🔥 {milestones[streak].title()} Streak Milestone!",
+                    message=(
+                        f"Amazing, {student.first_name}! You've maintained a {milestones[streak]} study streak! "
+                        f"You've earned a bonus of {bonus} points! Keep it up! 🏆"
+                    ),
+                    notification_type='motivation',
+                )

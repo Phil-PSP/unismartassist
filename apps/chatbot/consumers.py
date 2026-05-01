@@ -44,6 +44,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             # Use session_id from init or from this message
             effective_session_id = session_id or getattr(self, '_session_id', None)
+            offline = data.get('offline', False)
 
             # Echo user message back
             await self.send(text_data=json.dumps({
@@ -53,7 +54,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }))
 
             # Process with chatbot engine
-            response_data = await self.process_message(message, effective_session_id)
+            response_data = await self.process_message(message, effective_session_id, offline)
 
             # Send bot response
             await self.send(text_data=json.dumps({
@@ -72,7 +73,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }))
 
     @database_sync_to_async
-    def process_message(self, message, session_id=None):
+    def process_message(self, message, session_id=None, offline=False):
         """Process message synchronously in thread pool"""
         from .nlp_engine import ChatbotEngine
         from .models import ChatSession, ChatMessage
@@ -90,7 +91,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ChatMessage.objects.create(session=session, sender='user', message=message)
 
         # Run chatbot engine
-        engine = ChatbotEngine(self.user, session=session)
+        engine = ChatbotEngine(self.user, session=session, offline=offline)
         result = engine.process(message, session.context)
 
         # Update session context

@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}KAAF University{% endblock %}</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#c88500">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="KAAF AI">
+  <link rel="apple-touch-icon" href="/static/my-logo.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -510,6 +516,88 @@ function updateNotifBadge() {
   }).catch(()=>{});
 }
 {% if user.is_authenticated %}updateNotifBadge(); setInterval(updateNotifBadge, 30000);{% endif %}
+</script>
+
+<!-- ── Offline Banner ── -->
+<div id="offline-banner" class="hidden fixed top-0 inset-x-0 z-[100] flex items-center justify-center gap-2 py-2 px-4 text-sm font-medium text-white"
+     style="background:#b45309">
+  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728M15.536 8.464a5 5 0 010 7.072M12 12h.01M8.464 15.536a5 5 0 010-7.072M5.636 18.364a9 9 0 010-12.728"/>
+  </svg>
+  You're offline — showing cached data. Some features may be limited.
+</div>
+
+<!-- ── Install PWA Button ── -->
+<div id="install-banner" class="hidden fixed bottom-20 md:bottom-6 right-4 z-50">
+  <button id="install-btn"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg transition-all hover:scale-105"
+          style="background:#c88500">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+    </svg>
+    Install App
+  </button>
+</div>
+
+<script>
+// ── Service Worker Registration ────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/static/sw.js', { scope: '/' })
+      .then(reg => {
+        console.log('SW registered:', reg.scope);
+        // Listen for sync-complete messages from SW
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data?.type === 'sync-complete') {
+            console.log('Offline message synced:', e.data.message);
+          }
+        });
+      })
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+
+// ── Online/Offline Detection ───────────────────────────────────────────────────
+const offlineBanner = document.getElementById('offline-banner');
+function updateOnlineStatus() {
+  if (!navigator.onLine) {
+    offlineBanner.classList.remove('hidden');
+    document.body.style.paddingTop = '36px';
+  } else {
+    offlineBanner.classList.add('hidden');
+    document.body.style.paddingTop = '';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ── PWA Install Prompt ─────────────────────────────────────────────────────────
+let deferredPrompt;
+const installBanner = document.getElementById('install-banner');
+const installBtn = document.getElementById('install-btn');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install button if not already installed
+  if (!window.matchMedia('(display-mode: standalone)').matches) {
+    installBanner.classList.remove('hidden');
+  }
+});
+
+installBtn?.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') installBanner.classList.add('hidden');
+  deferredPrompt = null;
+});
+
+// Hide if already installed as PWA
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  installBanner?.classList.add('hidden');
+}
 </script>
 {% block extra_scripts %}{% endblock %}
 </body>

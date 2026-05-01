@@ -83,7 +83,8 @@ def send_message_view(request):
     ChatMessage.objects.create(session=session, sender='user', message=message)
 
     # Process
-    engine = ChatbotEngine(request.user, session=session)
+    offline = data.get('offline', False)
+    engine = ChatbotEngine(request.user, session=session, offline=offline)
     result = engine.process(message, session.context)
 
     # Update session

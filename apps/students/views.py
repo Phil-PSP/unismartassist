@@ -98,9 +98,12 @@ def documents_view(request):
         doc.student = profile
         doc.file_type = doc.file.name.split('.')[-1].lower()
         doc.save()
-        # Process document asynchronously
+        # Process document (synchronously if Celery not available)
         from .tasks import process_document
-        process_document.delay(doc.id)
+        try:
+            process_document.delay(doc.id)
+        except AttributeError:
+            process_document(doc.id)
         messages.success(request, 'Document uploaded. Processing in background...')
         request.user.add_points(5, 'Document uploaded')
         return redirect('documents')

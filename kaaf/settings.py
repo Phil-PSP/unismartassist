@@ -184,6 +184,14 @@ try:
             'task': 'apps.notifications.tasks.send_exam_countdown_alerts',
             'schedule': crontab(hour=8, minute=30),
         },
+        'daily-challenge': {
+            'task': 'apps.notifications.tasks.send_daily_challenge',
+            'schedule': crontab(hour=7, minute=30),  # 7:30am daily
+        },
+        'streak-milestones': {
+            'task': 'apps.notifications.tasks.check_streak_milestones',
+            'schedule': crontab(hour=20, minute=0),  # 8pm daily
+        },
     }
 except ImportError:
     pass  # Celery not installed — tasks run manually or via Redis when available
@@ -208,9 +216,22 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8000',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'https://*.ngrok.io',
+]
+
 # Session
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = True
+
+# In-memory cache for fast repeated lookups (system prompts, dashboard data)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'TIMEOUT': 300,  # 5 minutes
+    }
+}
 
 # File upload limits
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
