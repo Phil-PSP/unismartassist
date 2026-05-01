@@ -1,0 +1,23 @@
+# Default: normalize all text files to LF on commit
+* text=auto eol=lf
+
+# Force these config files to always be LF
+*.json text eol=lf
+*.toml text eol=lf
+Procfile text eol=lf
+runtime.txt text eol=lf
+requirements.txt text eol=lf
+*.py text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.md text eol=lf
+
+# Binaries — never touch line endings
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.sqlite3 binary
