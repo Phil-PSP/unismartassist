@@ -510,12 +510,16 @@ function appShell() {
   }
 }
 function updateNotifBadge() {
-  fetch('/notifications/unread-count/').then(r=>r.json()).then(d=>{
+  fetch('/notifications/unread-count/', {redirect: 'manual'}).then(r=>{
+    if (r.type === 'opaqueredirect' || r.status === 302 || r.status === 0) return;
+    return r.json();
+  }).then(d=>{
+    if (!d) return;
     const b = document.getElementById('notif-badge');
     if (b) b.classList.toggle('hidden', d.count === 0);
   }).catch(()=>{});
 }
-{% if user.is_authenticated %}updateNotifBadge(); setInterval(updateNotifBadge, 30000);{% endif %}
+{% if user.is_authenticated %}updateNotifBadge(); setInterval(updateNotifBadge, 120000);{% endif %}
 </script>
 
 <!-- ── Offline Banner ── -->
@@ -541,6 +545,8 @@ function updateNotifBadge() {
 
 <script>
 // ── Service Worker Registration ────────────────────────────────────────────────
+// DISABLED FOR NGROK TESTING - Uncomment to re-enable offline features
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/static/sw.js', { scope: '/' })
@@ -556,11 +562,15 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.log('SW registration failed:', err));
   });
 }
+*/
 
 // ── Online/Offline Detection ───────────────────────────────────────────────────
 const offlineBanner = document.getElementById('offline-banner');
 function updateOnlineStatus() {
-  if (!navigator.onLine) {
+  // Force online status for ngrok testing - comment out to restore offline detection
+  const isOnline = true; // Change to: navigator.onLine to restore normal behavior
+  
+  if (!isOnline) {
     offlineBanner.classList.remove('hidden');
     document.body.style.paddingTop = '36px';
   } else {

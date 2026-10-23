@@ -79,8 +79,10 @@ class Command(BaseCommand):
         admin, _ = User.objects.get_or_create(user_id='ADM/001', defaults={
             'email': 'admin@kaaf.edu.gh', 'first_name': 'System', 'last_name': 'Admin',
             'role': 'admin', 'is_staff': True, 'is_superuser': True,
+            'mfa_enabled': True,
         })
         admin.set_password('admin123')
+        admin.mfa_enabled = True
         admin.save()
 
         # Students

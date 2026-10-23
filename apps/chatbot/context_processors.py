@@ -20,15 +20,16 @@ def admin_nav(request):
         return {}
     return {
         'admin_nav_items': [
-            ('admin_users',       'Users',        '👥'),
-            ('admin_add_user',    'Add User',     '➕'),
-            ('admin_announcements','Announcements','📢'),
-            ('admin_results',     'Results',      '📊'),
-            ('admin_groups',      'Groups',       '🏫'),
-            ('admin_group_chats', 'Group Chats',  '💬'),
-            ('admin_programmes',  'Programmes',   '🎓'),
-            ('admin_batches',     'Batches',      '📋'),
-            ('admin_levels',      'Levels',       '📈'),
-            ('admin_events',      'Events',       '📅'),
+            ('admin_users',          'Users',           '👥'),
+            ('admin_add_user',       'Add User',        '➕'),
+            ('admin_import_students','Import Students', '📥'),
+            ('admin_announcements',  'Announcements',   '📢'),
+            ('admin_results',        'Results',         '📊'),
+            ('admin_groups',         'Groups',          '🏫'),
+            ('admin_group_chats',    'Group Chats',     '💬'),
+            ('admin_programmes',     'Programmes',      '🎓'),
+            ('admin_batches',        'Batches',         '📋'),
+            ('admin_levels',         'Levels',          '📈'),
+            ('admin_events',         'Events',          '📅'),
         ]
     }

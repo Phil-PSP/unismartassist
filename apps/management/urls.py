@@ -23,4 +23,5 @@ urlpatterns = [
     path('levels/', views.levels_view, name='admin_levels'),
     path('group-chats/', views.group_chats_view, name='admin_group_chats'),
     path('group-chats/<int:group_id>/message/', views.send_group_chat_message_view, name='admin_group_chat_message'),
+    path('import-students/', views.import_students_view, name='admin_import_students'),
 ]

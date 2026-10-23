@@ -44,6 +44,17 @@
       <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
         {{ form.email }}
+        <p class="text-xs mt-1" style="color:var(--muted)">Institutional email — used as your login identifier</p>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5" style="color:var(--text)">
+          Personal Email <span class="text-xs font-normal" style="color:var(--muted)">(for OTP / MFA)</span>
+        </label>
+        {{ form.personal_email }}
+        <p class="text-xs mt-1" style="color:var(--muted)">Your personal Gmail or other inbox where OTP codes will be sent</p>
+        {% if user.mfa_enabled and not user.personal_email %}
+        <p class="text-xs mt-1 text-amber-600 font-semibold">⚠️ MFA is enabled but no personal email is set — OTP will go to your institutional email</p>
+        {% endif %}
       </div>
       <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Phone</label>

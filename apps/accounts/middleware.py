@@ -15,12 +15,15 @@ class ActivityLogMiddleware:
         if (request.user.is_authenticated and
                 request.method == 'GET' and
                 not any(request.path.startswith(p) for p in self.EXCLUDED_PATHS)):
-            ActivityLog.objects.create(
-                user=request.user,
-                action='page_visit',
-                description=request.path,
-                ip_address=self.get_client_ip(request),
-            )
+            try:
+                ActivityLog.objects.create(
+                    user=request.user,
+                    action='page_visit',
+                    description=request.path,
+                    ip_address=self.get_client_ip(request),
+                )
+            except Exception:
+                pass  # Never let logging break the request
         return response
 
     def get_client_ip(self, request):

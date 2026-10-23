@@ -17,6 +17,7 @@ urlpatterns = [
     path('notifications/', include('apps.notifications.urls')),
     path('planner/', include('apps.planner.urls')),
     path('manage/', include('apps.management.urls')),
+    path('exams/', include('apps.exams.urls')),  # New examination system
     # REST API
     path('api/accounts/', include('apps.accounts.api_urls')),
     path('api/students/', include('apps.students.api_urls')),

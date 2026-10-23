@@ -124,7 +124,7 @@
     </div>
   </div>
 
-  {% elif user.is_admin %}
+  {% elif user.role == 'admin' %}
 
   <!-- Admin KPI Cards -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -345,7 +345,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-{% if user.is_admin %}
+{% if user.role == 'admin' %}
 <script>
 const chatLabels = {{ chat_labels|safe }};
 const chatData = {{ chat_data|safe }};

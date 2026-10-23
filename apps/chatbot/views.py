@@ -83,7 +83,8 @@ def send_message_view(request):
     ChatMessage.objects.create(session=session, sender='user', message=message)
 
     # Process
-    offline = data.get('offline', False)
+    # FORCE ONLINE MODE FOR NGROK - Remove this line to restore offline detection
+    offline = False  # data.get('offline', False)
     engine = ChatbotEngine(request.user, session=session, offline=offline)
     result = engine.process(message, session.context)
 

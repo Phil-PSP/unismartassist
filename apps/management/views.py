@@ -19,7 +19,9 @@ from apps.students.models import (
 def admin_required(view_func):
     @login_required
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_admin:
+        if not request.user.is_authenticated:
+            return redirect('login')
+        if request.user.role != 'admin':
             messages.error(request, 'Admin access required.')
             return redirect('dashboard')
         return view_func(request, *args, **kwargs)
@@ -117,18 +119,78 @@ def _send_announcement_notifications(ann):
 def users_view(request):
     role_filter = request.GET.get('role', '')
     search = request.GET.get('q', '').strip()
-    users = User.objects.filter(is_active=True).order_by('-date_joined')
+    dept_filter = request.GET.get('dept', '')
+    level_filter = request.GET.get('level', '')
+    year_filter = request.GET.get('year', '')
+    faculty_filter = request.GET.get('faculty', '')
+    sort = request.GET.get('sort', '-date_joined')
+
+    # Allowed sort fields
+    SORT_OPTIONS = {
+        'user_id': 'user_id',
+        '-user_id': '-user_id',
+        'name': 'first_name',
+        '-name': '-first_name',
+        'date_joined': 'date_joined',
+        '-date_joined': '-date_joined',
+    }
+    order_by = SORT_OPTIONS.get(sort, '-date_joined')
+
+    users = User.objects.filter(is_active=True)
+
     if role_filter:
         users = users.filter(role=role_filter)
     if search:
-        users = users.filter(
-            user_id__icontains=search
-        ) | users.filter(first_name__icontains=search) | users.filter(last_name__icontains=search)
+        users = (users.filter(user_id__icontains=search) |
+                 users.filter(first_name__icontains=search) |
+                 users.filter(last_name__icontains=search) |
+                 users.filter(email__icontains=search))
+
+    # Student-specific filters (join through StudentProfile)
+    if dept_filter or level_filter or year_filter or faculty_filter:
+        from apps.students.models import StudentProfile
+        profiles = StudentProfile.objects.all()
+        if level_filter:
+            profiles = profiles.filter(level=level_filter)
+        if year_filter:
+            profiles = profiles.filter(academic_year=year_filter)
+        if dept_filter:
+            profiles = profiles.filter(programme__department__id=dept_filter)
+        if faculty_filter:
+            profiles = profiles.filter(programme__department__faculty__icontains=faculty_filter)
+        student_user_ids = profiles.values_list('user_id', flat=True)
+        users = users.filter(id__in=student_user_ids)
+
+    users = users.order_by(order_by).select_related('student_profile__programme__department')
+
+    # Data for filter dropdowns
+    from apps.students.models import Department
+    departments = Department.objects.order_by('name')
+    faculties = Department.objects.values_list('faculty', flat=True).distinct().order_by('faculty')
+    academic_years = StudentProfile.objects.values_list(
+        'academic_year', flat=True).distinct().order_by('-academic_year') if 'StudentProfile' in dir() else []
+
+    # Import StudentProfile if not already
+    from apps.students.models import StudentProfile
+    academic_years = StudentProfile.objects.values_list(
+        'academic_year', flat=True).distinct().order_by('-academic_year')
+
+    total = users.count()
+
     return render(request, 'management/users.html', {
-        'users': users[:100],
+        'users': users[:200],
         'role_filter': role_filter,
         'search': search,
-        'total': users.count(),
+        'dept_filter': dept_filter,
+        'level_filter': level_filter,
+        'year_filter': year_filter,
+        'faculty_filter': faculty_filter,
+        'sort': sort,
+        'total': total,
+        'departments': departments,
+        'faculties': faculties,
+        'academic_years': academic_years,
+        'levels': [100, 200, 300, 400],
     })
 
 
@@ -572,3 +634,133 @@ def send_group_chat_message_view(request, group_id):
     ]
     Notification.objects.bulk_create(notifs, ignore_conflicts=True)
     return JsonResponse({'status': 'ok', 'count': len(notifs)})
+
+
+# ── PDF Student Import ────────────────────────────────────────────────────────
+
+@admin_required
+def import_students_view(request):
+    """Upload one or more PDFs containing student lists and bulk-create accounts."""
+    programmes = Programme.objects.select_related('department').order_by('name')
+
+    if request.method == 'POST':
+        from .pdf_import import (
+            extract_text_from_pdf, parse_students_from_text,
+            find_programme, generate_email,
+        )
+
+        pdf_files = request.FILES.getlist('pdf_files')
+        default_level = int(request.POST.get('default_level', 100))
+        default_programme_id = request.POST.get('default_programme') or None
+        default_password = request.POST.get('default_password', 'kaaf2024')
+
+        default_programme = None
+        if default_programme_id:
+            try:
+                default_programme = Programme.objects.get(id=default_programme_id)
+            except Programme.DoesNotExist:
+                pass
+
+        all_programmes = list(programmes)
+        created_count = 0
+        updated_count = 0
+        skipped_count = 0
+        errors = []
+        preview = []
+
+        for pdf_file in pdf_files:
+            try:
+                text = extract_text_from_pdf(pdf_file)
+                students, meta = parse_students_from_text(
+                    text,
+                    default_level=default_level,
+                    default_programme=default_programme.name if default_programme else None,
+                )
+
+                if not students:
+                    errors.append(f"'{pdf_file.name}': No students found. Check PDF format.")
+                    continue
+
+                with transaction.atomic():
+                    for s in students:
+                        try:
+                            # Use school student number as user_id
+                            user_id = s['student_no']
+                            email = generate_email(s['first_name'], s['last_name'], user_id)
+
+                            # Resolve programme from PDF metadata
+                            programme = find_programme(
+                                s['programme_hint'],
+                                s['programme_code'],
+                                all_programmes
+                            ) or default_programme
+
+                            # Create or update user
+                            user, created = User.objects.get_or_create(
+                                user_id=user_id,
+                                defaults={
+                                    'email': email,
+                                    'first_name': s['first_name'],
+                                    'last_name': s['last_name'],
+                                    'role': User.STUDENT,
+                                }
+                            )
+                            if created:
+                                user.set_password(default_password)
+                                user.save()
+                                created_count += 1
+                            else:
+                                # Update name if changed
+                                user.first_name = s['first_name']
+                                user.last_name = s['last_name']
+                                user.save(update_fields=['first_name', 'last_name'])
+                                updated_count += 1
+
+                            # Create or update student profile
+                            profile, _ = StudentProfile.objects.update_or_create(
+                                user=user,
+                                defaults={
+                                    'programme': programme,
+                                    'level': s['level'],
+                                    'academic_year': s['academic_year'],
+                                    'semester': s['semester'],
+                                }
+                            )
+
+                            preview.append({
+                                'user_id': user_id,
+                                'name': f"{s['first_name']} {s['last_name']}",
+                                'level': s['level'],
+                                'programme': programme.name if programme else '—',
+                                'academic_year': s['academic_year'],
+                                'created': created,
+                            })
+
+                        except Exception as e:
+                            skipped_count += 1
+                            errors.append(f"{s.get('student_no','?')} {s.get('first_name','')} {s.get('last_name','')}: {e}")
+
+            except Exception as e:
+                errors.append(f"File '{pdf_file.name}': {e}")
+
+        if created_count:
+            messages.success(request, f'✅ {created_count} new students imported. Default password: "{default_password}"')
+        if updated_count:
+            messages.info(request, f'🔄 {updated_count} existing students updated.')
+        if skipped_count:
+            messages.warning(request, f'⚠️ {skipped_count} entries skipped.')
+        for err in errors[:10]:
+            messages.error(request, err)
+
+        return render(request, 'management/import_students.html', {
+            'programmes': programmes,
+            'preview': preview,
+            'created_count': created_count,
+            'updated_count': updated_count,
+            'skipped_count': skipped_count,
+            'errors': errors,
+        })
+
+    return render(request, 'management/import_students.html', {
+        'programmes': programmes,
+    })

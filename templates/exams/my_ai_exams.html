@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My AI-Generated Exams - KAAF University{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold mb-1" style="color:var(--text)">My AI-Generated Exams</h1>
+            <p class="text-sm" style="color:var(--muted)">Exams created by AI just for you</p>
+        </div>
+        <a 
+            href="{% url 'exams:ai_exam_generator' %}"
+            class="px-4 py-2 rounded-lg font-semibold text-white transition-all hover:opacity-90"
+            style="background:linear-gradient(135deg, var(--brand) 0%, #9333ea 100%)"
+        >
+            <span class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Generate New Exam
+            </span>
+        </a>
+    </div>
+
+    {% if exams %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for exam in exams %}
+            <div class="card p-5 hover:shadow-lg transition-shadow">
+                <!-- Exam Header -->
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg mb-1" style="color:var(--text)">
+                            {{ exam.title }}
+                        </h3>
+                        <p class="text-sm" style="color:var(--muted)">
+                            {{ exam.course.code }} • {{ exam.description }}
+                        </p>
+                    </div>
+                    <span class="px-2 py-1 rounded text-xs font-semibold" 
+                          style="background:var(--accent);color:var(--brand)">
+                        AI Generated
+                    </span>
+                </div>
+
+                <!-- Exam Stats -->
+                <div class="grid grid-cols-3 gap-3 mb-4 p-3 rounded-lg" style="background:var(--accent)">
+                    <div class="text-center">
+                        <div class="text-xs" style="color:var(--muted)">Questions</div>
+                        <div class="font-bold" style="color:var(--text)">{{ exam.total_questions }}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs" style="color:var(--muted)">Duration</div>
+                        <div class="font-bold" style="color:var(--text)">{{ exam.duration_minutes }}m</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs" style="color:var(--muted)">Marks</div>
+                        <div class="font-bold" style="color:var(--text)">{{ exam.total_marks }}</div>
+                    </div>
+                </div>
+
+                <!-- Difficulty Badge -->
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-xs font-semibold px-2 py-1 rounded"
+                          style="{% if exam.difficulty == 'easy' %}background:#dcfce7;color:#166534{% elif exam.difficulty == 'hard' %}background:#fee2e2;color:#991b1b{% else %}background:#fef3c7;color:#92400e{% endif %}">
+                        {{ exam.get_difficulty_display }}
+                    </span>
+                    {% if exam.attempts_count > 0 %}
+                    <span class="text-xs" style="color:var(--muted)">
+                        • {{ exam.attempts_count }} attempt{{ exam.attempts_count|pluralize }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2">
+                    <a 
+                        href="{% url 'exams:exam_detail' exam.id %}"
+                        class="flex-1 px-4 py-2 rounded-lg font-semibold text-center transition-all hover:opacity-80"
+                        style="background:var(--brand);color:white"
+                    >
+                        {% if exam.attempts_count > 0 %}
+                            View Details
+                        {% else %}
+                            Start Exam
+                        {% endif %}
+                    </a>
+                </div>
+
+                <!-- Created Date -->
+                <div class="mt-3 pt-3 border-t text-xs" style="border-color:var(--border);color:var(--muted)">
+                    Created {{ exam.created_at|timesince }} ago
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-16">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" 
+                 style="background:var(--accent)">
+                <svg class="w-10 h-10" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2" style="color:var(--text)">No AI Exams Yet</h3>
+            <p class="mb-6" style="color:var(--muted)">Generate your first AI-powered exam on any topic</p>
+            <a 
+                href="{% url 'exams:ai_exam_generator' %}"
+                class="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-all hover:opacity-90"
+                style="background:linear-gradient(135deg, var(--brand) 0%, #9333ea 100%)"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Generate Your First Exam
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

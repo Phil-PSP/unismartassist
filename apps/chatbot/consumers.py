@@ -44,7 +44,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             # Use session_id from init or from this message
             effective_session_id = session_id or getattr(self, '_session_id', None)
-            offline = data.get('offline', False)
+            # FORCE ONLINE MODE FOR NGROK - Remove this line to restore offline detection
+            offline = False  # data.get('offline', False)
 
             # Echo user message back
             await self.send(text_data=json.dumps({

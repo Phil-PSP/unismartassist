@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'channels',
     'corsheaders',
     # Local apps
-    'apps.accounts',
+    'apps.accounts.apps.AccountsConfig',
     'apps.students',
     'apps.staff',
     'apps.chatbot',
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'apps.planner',
     'apps.analytics',
     'apps.management',
+    'apps.exams',  # New examination system
 ]
 
 MIDDLEWARE = [
@@ -80,16 +81,21 @@ ASGI_APPLICATION = 'kaaf.asgi.application'
 WSGI_APPLICATION = 'kaaf.wsgi.application'
 
 # Database — uses DATABASE_URL on Railway, falls back to SQLite locally
+_db_url = os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-        conn_health_checks=True,
+        default=_db_url,
+        conn_max_age=0,
     )
 }
+# SQLite-specific: 30s busy timeout to prevent "database is locked"
+if 'sqlite' in _db_url:
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS']['timeout'] = 30
 
 # Auth
 AUTH_USER_MODEL = 'accounts.User'
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -251,9 +257,12 @@ CSRF_TRUSTED_ORIGINS = [
 if _railway_domain:
     CSRF_TRUSTED_ORIGINS.append(f'https://{_railway_domain}')
 
-# Session
+# Session — database backend
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_HTTPONLY = True
 
 # In-memory cache for fast repeated lookups (system prompts, dashboard data)
 CACHES = {

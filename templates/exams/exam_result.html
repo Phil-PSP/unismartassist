@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exam Results - {{ attempt.exam.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Back Button -->
+        <div class="mb-6">
+            <a href="{% url 'exams:exam_detail' attempt.exam.id %}" class="text-amber-600 hover:text-amber-700 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Exam Details
+            </a>
+        </div>
+
+        <!-- Results Header -->
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+            <div class="text-center mb-6">
+                {% if attempt.passed %}
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-4">
+                    <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-green-600 mb-2">Congratulations! You Passed!</h1>
+                {% else %}
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-4">
+                    <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-red-600 mb-2">Keep Trying!</h1>
+                {% endif %}
+                <p class="text-gray-600">{{ attempt.exam.title }}</p>
+            </div>
+
+            <!-- Score Display -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-gray-50 rounded-lg p-6 text-center">
+                    <div class="text-sm text-gray-500 mb-2">Your Score</div>
+                    <div class="text-4xl font-bold text-gray-900">{{ attempt.score }}</div>
+                    <div class="text-sm text-gray-500">out of {{ attempt.exam.total_marks }}</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-6 text-center">
+                    <div class="text-sm text-gray-500 mb-2">Percentage</div>
+                    <div class="text-4xl font-bold {% if attempt.passed %}text-green-600{% else %}text-red-600{% endif %}">
+                        {{ attempt.percentage|floatformat:1 }}%
+                    </div>
+                    <div class="text-sm text-gray-500">Pass mark: {{ attempt.exam.pass_mark }}</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-6 text-center">
+                    <div class="text-sm text-gray-500 mb-2">Time Taken</div>
+                    <div class="text-4xl font-bold text-gray-900">{{ attempt.time_taken_minutes }}</div>
+                    <div class="text-sm text-gray-500">minutes</div>
+                </div>
+            </div>
+
+            <!-- Attempt Info -->
+            <div class="border-t border-gray-200 pt-6">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">Attempt Number:</span>
+                        <span class="font-medium text-gray-900 ml-2">#{{ attempt.attempt_number }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Submitted:</span>
+                        <span class="font-medium text-gray-900 ml-2">{{ attempt.submitted_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if attempt.feedback %}
+            <div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">Instructor Feedback</h3>
+                        <div class="mt-2 text-sm text-blue-700">
+                            {{ attempt.feedback|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Answer Review -->
+        {% if can_review %}
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Answer Review</h2>
+            
+            <div class="space-y-6">
+                {% for answer in answers %}
+                <div class="border-l-4 {% if answer.is_correct %}border-green-500{% elif answer.is_correct == False %}border-red-500{% else %}border-gray-300{% endif %} pl-4 py-2">
+                    <!-- Question -->
+                    <div class="mb-3">
+                        <div class="flex items-start justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                Question {{ forloop.counter }}
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                {% if answer.is_correct %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    ✓ Correct
+                                </span>
+                                {% elif answer.is_correct == False %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    ✗ Incorrect
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Pending Review
+                                </span>
+                                {% endif %}
+                                <span class="text-sm text-gray-500">
+                                    {{ answer.marks_awarded|default:0 }}/{{ answer.question.marks }} marks
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-gray-700">{{ answer.question.question_text }}</p>
+                    </div>
+
+                    <!-- Your Answer -->
+                    <div class="mb-2">
+                        <span class="text-sm font-medium text-gray-700">Your Answer:</span>
+                        {% if answer.selected_option %}
+                        <p class="mt-1 text-gray-900">{{ answer.selected_option.option_text }}</p>
+                        {% elif answer.answer_text %}
+                        <p class="mt-1 text-gray-900">{{ answer.answer_text }}</p>
+                        {% else %}
+                        <p class="mt-1 text-gray-500 italic">No answer provided</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Correct Answer (for multiple choice and fill_blank) -->
+                    {% if answer.question.question_type == 'multiple_choice' or answer.question.question_type == 'true_false' %}
+                    <div class="mb-2">
+                        <span class="text-sm font-medium text-gray-700">Correct Answer:</span>
+                        {% for option in answer.question.options.all %}
+                            {% if option.is_correct %}
+                            <p class="mt-1 text-green-700 font-medium">{{ option.option_text }}</p>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% elif answer.question.question_type == 'fill_blank' %}
+                    <div class="mb-2">
+                        <span class="text-sm font-medium text-gray-700">Correct Answer:</span>
+                        <p class="mt-1 text-green-700 font-medium">{{ answer.question.expected_answer }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Feedback -->
+                    {% if answer.feedback %}
+                    <div class="mt-2 bg-gray-50 rounded p-3">
+                        <span class="text-sm font-medium text-gray-700">Feedback:</span>
+                        <p class="mt-1 text-sm text-gray-600">{{ answer.feedback }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="mt-6 flex justify-center space-x-4">
+            <a href="{% url 'exams:exam_list' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-6 rounded-lg">
+                Back to Exams
+            </a>
+            {% if attempt.exam.max_attempts > attempt.attempt_number %}
+            <a href="{% url 'exams:exam_detail' attempt.exam.id %}" class="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-6 rounded-lg">
+                Try Again
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

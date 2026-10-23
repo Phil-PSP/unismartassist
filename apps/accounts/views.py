@@ -16,6 +16,8 @@ def _generate_otp():
 
 def _send_otp_email(user, otp):
     from django.core.mail import send_mail
+    # Send to personal email if set, otherwise fall back to account email
+    recipient = user.personal_email if user.personal_email else user.email
     try:
         send_mail(
             subject='KAAF University — Your Login OTP',
@@ -28,7 +30,7 @@ def _send_otp_email(user, otp):
                 f"KAAF University Smart Assistant"
             ),
             from_email='noreply@kaafuni.edu.gh',
-            recipient_list=[user.email],
+            recipient_list=[recipient],
             fail_silently=True,
         )
     except Exception:
@@ -52,9 +54,11 @@ def login_view(request):
             user.save(update_fields=['mfa_secret', 'mfa_secret_expires'])
             _send_otp_email(user, otp)
             request.session['mfa_user_id'] = user.id
+            request.session.save()
             return redirect('mfa_verify')
 
         # No MFA — log in directly
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(request, user)
         ActivityLog.objects.create(
             user=user, action='login',
@@ -65,6 +69,26 @@ def login_view(request):
         return redirect(request.GET.get('next', 'dashboard'))
 
     return render(request, 'accounts/login.html', {'form': form})
+
+
+def mfa_resend_view(request):
+    """Resend OTP to the user's email."""
+    user_id = request.session.get('mfa_user_id')
+    if not user_id:
+        return redirect('login')
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return redirect('login')
+
+    otp = _generate_otp()
+    user.mfa_secret = otp
+    user.mfa_secret_expires = timezone.now() + timedelta(minutes=10)
+    user.save(update_fields=['mfa_secret', 'mfa_secret_expires'])
+    _send_otp_email(user, otp)
+    request.session['mfa_resent'] = True
+    request.session.save()
+    return redirect('mfa_verify')
 
 
 def mfa_verify_view(request):
@@ -83,12 +107,17 @@ def mfa_verify_view(request):
         if (user.mfa_secret == otp_entered and
                 user.mfa_secret_expires and
                 timezone.now() <= user.mfa_secret_expires):
-            # Clear OTP
             user.mfa_secret = ''
             user.mfa_secret_expires = None
             user.save(update_fields=['mfa_secret', 'mfa_secret_expires'])
-            del request.session['mfa_user_id']
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
+            request.session['_auth_user_id'] = str(user.pk)
+            request.session['_auth_user_backend'] = 'django.contrib.auth.backends.ModelBackend'
+            request.session.pop('mfa_user_id', None)
+            request.session.pop('dev_otp', None)
+            request.session.modified = True
+            request.session.save()
             ActivityLog.objects.create(
                 user=user, action='login',
                 description='User logged in with MFA',
@@ -98,14 +127,80 @@ def mfa_verify_view(request):
             return redirect('dashboard')
         elif user.mfa_secret_expires and timezone.now() > user.mfa_secret_expires:
             error = 'OTP has expired. Please log in again.'
-            del request.session['mfa_user_id']
+            request.session.pop('mfa_user_id', None)
+            request.session.pop('dev_otp', None)
             return redirect('login')
         else:
             error = 'Invalid OTP. Please try again.'
 
+    from django.conf import settings as django_settings
+    dev_otp = request.session.get('dev_otp') if django_settings.DEBUG else None
+    otp_email = user.personal_email if user.personal_email else user.email
+    email_hint = f"{otp_email[:3]}***@{otp_email.split('@')[1]}"
+    resent = request.session.pop('mfa_resent', False)
+    request.session.save()
+
     return render(request, 'accounts/mfa_verify.html', {
         'user': user, 'error': error,
-        'email_hint': f"{user.email[:3]}***@{user.email.split('@')[1]}"
+        'email_hint': email_hint,
+        'dev_otp': dev_otp,
+        'resent': resent,
+    })
+    """Verify OTP for MFA login."""
+    user_id = request.session.get('mfa_user_id')
+    if not user_id:
+        return redirect('login')
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return redirect('login')
+
+    error = None
+    if request.method == 'POST':
+        otp_entered = request.POST.get('otp', '').strip()
+        if (user.mfa_secret == otp_entered and
+                user.mfa_secret_expires and
+                timezone.now() <= user.mfa_secret_expires):
+            # Clear OTP from DB
+            user.mfa_secret = ''
+            user.mfa_secret_expires = None
+            user.save(update_fields=['mfa_secret', 'mfa_secret_expires'])
+            # Must set backend before login() when AUTHENTICATION_BACKENDS is explicit
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            request.session['_auth_user_id'] = str(user.pk)
+            request.session['_auth_user_backend'] = 'django.contrib.auth.backends.ModelBackend'
+            request.session.pop('mfa_user_id', None)
+            request.session.pop('dev_otp', None)
+            request.session.modified = True
+            request.session.save()
+            ActivityLog.objects.create(
+                user=user, action='login',
+                description='User logged in with MFA',
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+            messages.success(request, f'Welcome back, {user.first_name}!')
+            return redirect('dashboard')
+        elif user.mfa_secret_expires and timezone.now() > user.mfa_secret_expires:
+            error = 'OTP has expired. Please log in again.'
+            request.session.pop('mfa_user_id', None)
+            request.session.pop('dev_otp', None)
+            return redirect('login')
+        else:
+            error = 'Invalid OTP. Please try again.'
+
+    from django.conf import settings as django_settings
+    dev_otp = request.session.get('dev_otp') if django_settings.DEBUG else None
+    otp_email = user.personal_email if user.personal_email else user.email
+    email_hint = f"{otp_email[:3]}***@{otp_email.split('@')[1]}"
+    resent = request.session.pop('mfa_resent', False)
+    request.session.save()
+
+    return render(request, 'accounts/mfa_verify.html', {
+        'user': user, 'error': error,
+        'email_hint': email_hint,
+        'dev_otp': dev_otp,
+        'resent': resent,
     })
 
 

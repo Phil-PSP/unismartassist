@@ -376,6 +376,8 @@ function chatApp() {
       const payload = { message: msg, session_id: SESSION_ID };
 
       // Offline — queue and respond locally
+      // DISABLED FOR NGROK TESTING - Uncomment to restore offline detection
+      /*
       if (!navigator.onLine) {
         this._queueOfflineMessage(msg);
         setTimeout(() => {
@@ -384,14 +386,15 @@ function chatApp() {
         }, 600);
         return;
       }
+      */
 
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ ...payload, offline: !navigator.onLine }));
+        this.ws.send(JSON.stringify({ ...payload, offline: false }));
       } else {
         fetch('/chatbot/send/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-          body: JSON.stringify({ ...payload, offline: !navigator.onLine })
+          body: JSON.stringify({ ...payload, offline: false })
         })
         .then(r => r.json())
         .then(data => {

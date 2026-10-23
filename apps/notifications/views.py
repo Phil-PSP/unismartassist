@@ -40,6 +40,9 @@ def mark_all_read_view(request):
 
 @login_required
 def unread_count_view(request):
-    """API: Get unread notification count"""
-    count = Notification.objects.filter(user=request.user, is_read=False).count()
+    """API: Get unread notification count — returns 0 gracefully if DB is busy"""
+    try:
+        count = Notification.objects.filter(user=request.user, is_read=False).count()
+    except Exception:
+        count = 0
     return JsonResponse({'count': count})

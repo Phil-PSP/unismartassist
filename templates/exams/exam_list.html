@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Online Exams - KAAF University{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">📝 Online Examinations</h1>
+                    <p class="mt-2 text-gray-600">Take your exams online and view past questions</p>
+                </div>
+                {% if user.role == 'admin' or user.role == 'staff' %}
+                <a href="{% url 'exams:bulk_question_upload' %}" 
+                   class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    Bulk Upload Questions
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8">
+                <a href="{% url 'exams:exam_list' %}" class="border-b-2 border-amber-500 py-4 px-1 text-sm font-medium text-amber-600">
+                    Available Exams
+                </a>
+                <a href="{% url 'exams:past_questions_list' %}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-4 px-1 text-sm font-medium">
+                    Past Questions
+                </a>
+            </nav>
+        </div>
+
+        <!-- Available Exams -->
+        {% if available_exams %}
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">🟢 Available Now</h2>
+            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {% for exam in available_exams %}
+                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {{ exam.get_exam_type_display }}
+                            </span>
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                {{ exam.get_difficulty_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ exam.title }}</h3>
+                    <p class="text-sm text-gray-600 mb-4">{{ exam.course.code }} - {{ exam.course.name }}</p>
+                    
+                    <div class="space-y-2 text-sm text-gray-600 mb-4">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Duration: {{ exam.duration_minutes }} minutes
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Questions: {{ exam.total_questions }}
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            Total Marks: {{ exam.total_marks }}
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Attempts: {{ exam.attempts_count }}/{{ exam.max_attempts }}
+                        </div>
+                    </div>
+                    
+                    <a href="{% url 'exams:exam_detail' exam.id %}" class="block w-full text-center bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        View Details
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow p-8 text-center mb-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No exams available</h3>
+            <p class="mt-1 text-sm text-gray-500">Check back later for new exams.</p>
+        </div>
+        {% endif %}
+
+        <!-- Upcoming Exams -->
+        {% if upcoming_exams %}
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">🔜 Coming Soon</h2>
+            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {% for exam in upcoming_exams %}
+                <div class="bg-white rounded-lg shadow-md p-6 opacity-75">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-4">
+                        Starts {{ exam.start_time|date:"M d, Y H:i" }}
+                    </span>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ exam.title }}</h3>
+                    <p class="text-sm text-gray-600">{{ exam.course.code }} - {{ exam.course.name }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Past Exams -->
+        {% if past_exams %}
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">📚 Past Exams</h2>
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attempts</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for exam in past_exams %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ exam.title }}</div>
+                                <div class="text-sm text-gray-500">Ended {{ exam.end_time|date:"M d, Y" }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ exam.course.code }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ exam.attempts_count }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="{% url 'exams:exam_detail' exam.id %}" class="text-amber-600 hover:text-amber-900">View Results</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block title %}Import Students — KAAF{% endblock %}
+{% block page_title %}Import Students from PDF{% endblock %}
+{% block page_subtitle %}Bulk-create student accounts from KAAF attendance/class list PDFs{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6 animate-fade-in">
+
+  {% if messages %}
+  <div class="space-y-2">
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-info{% else %}alert-info{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Upload Form -->
+  <div class="card p-6">
+    <h2 class="text-lg font-bold mb-1" style="color:var(--text)">Upload Student PDF(s)</h2>
+    <p class="text-sm mb-5" style="color:var(--muted)">
+      Upload the KAAF attendance/class list PDFs from the student portal.
+      Department, Level, Academic Year and Semester are read automatically from each PDF.
+    </p>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-5">
+      {% csrf_token %}
+
+      <!-- PDF Files -->
+      <div>
+        <label class="block text-sm font-semibold mb-1.5" style="color:var(--text)">
+          PDF Files <span class="text-red-500">*</span>
+        </label>
+        <input type="file" name="pdf_files" accept=".pdf" multiple required
+               class="form-input py-2 cursor-pointer">
+        <p class="text-xs mt-1" style="color:var(--muted)">Hold Ctrl/Cmd to select multiple PDFs at once</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Fallback Level -->
+        <div>
+          <label class="block text-sm font-semibold mb-1.5" style="color:var(--text)">Fallback Level</label>
+          <select name="default_level" class="form-input">
+            <option value="100">Level 100</option>
+            <option value="200">Level 200</option>
+            <option value="300" selected>Level 300</option>
+            <option value="400">Level 400</option>
+          </select>
+          <p class="text-xs mt-1" style="color:var(--muted)">Used only if level can't be read from PDF</p>
+        </div>
+
+        <!-- Fallback Programme -->
+        <div>
+          <label class="block text-sm font-semibold mb-1.5" style="color:var(--text)">Fallback Programme</label>
+          <select name="default_programme" class="form-input">
+            <option value="">— Auto-detect from PDF —</option>
+            {% for prog in programmes %}
+            <option value="{{ prog.id }}">{{ prog.name }}</option>
+            {% endfor %}
+          </select>
+          <p class="text-xs mt-1" style="color:var(--muted)">Used only if programme can't be matched</p>
+        </div>
+
+        <!-- Default Password -->
+        <div>
+          <label class="block text-sm font-semibold mb-1.5" style="color:var(--text)">Default Password</label>
+          <input type="text" name="default_password" value="kaaf2024" class="form-input"
+                 placeholder="e.g. kaaf2024">
+          <p class="text-xs mt-1" style="color:var(--muted)">All new students get this password</p>
+        </div>
+      </div>
+
+      <!-- Info box -->
+      <div class="p-4 rounded-xl text-sm space-y-1.5" style="background:var(--brand-lt);border:1px solid rgba(200,133,0,.2)">
+        <p class="font-semibold" style="color:var(--brand)">📋 What gets read from the PDF automatically</p>
+        <ul class="space-y-1 text-xs" style="color:var(--muted)">
+          <li>✅ <strong>Student No</strong> — used as the login ID (e.g. <code>11100523</code>)</li>
+          <li>✅ <strong>Student Name</strong> — surname + first name, converted to title case</li>
+          <li>✅ <strong>Level</strong> — from the "Level: 300" header</li>
+          <li>✅ <strong>Academic Year</strong> — from the "AcademicYear: 2025/2026" header</li>
+          <li>✅ <strong>Semester</strong> — from the "2nd Semester" header</li>
+          <li>✅ <strong>Department/Programme</strong> — matched from "Department of Accounting"</li>
+          <li>🔄 If a student already exists, their name and profile are updated (not duplicated)</li>
+        </ul>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full py-3 text-base">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+        </svg>
+        Import Students
+      </button>
+    </form>
+  </div>
+
+  <!-- Skipped entries detail -->
+  {% if errors %}
+  <div class="card p-6">
+    <h3 class="font-bold text-base mb-3 text-amber-600">⚠️ Skipped Entries ({{ errors|length }})</h3>
+    <div class="space-y-1.5">
+      {% for err in errors %}
+      <div class="text-xs px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 font-mono">{{ err }}</div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Results Preview -->
+  {% if preview %}
+  <div class="card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="font-bold text-lg" style="color:var(--text)">Import Complete</h3>
+        <p class="text-sm mt-0.5" style="color:var(--muted)">
+          <span class="text-emerald-600 font-semibold">{{ created_count }} created</span>
+          {% if updated_count %} · <span class="text-blue-600 font-semibold">{{ updated_count }} updated</span>{% endif %}
+          {% if skipped_count %} · <span class="text-amber-600 font-semibold">{{ skipped_count }} skipped</span>{% endif %}
+        </p>
+      </div>
+      <a href="{% url 'admin_users' %}" class="btn btn-secondary text-sm">View All Users →</a>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">#</th>
+            <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Student No</th>
+            <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Name</th>
+            <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Level</th>
+            <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Programme</th>
+            <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Year</th>
+            <th class="text-left pb-2 text-xs font-semibold" style="color:var(--muted)">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y" style="border-color:var(--border)">
+          {% for s in preview %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20">
+            <td class="py-2 text-xs" style="color:var(--muted)">{{ forloop.counter }}</td>
+            <td class="py-2">
+              <span class="font-mono text-xs px-2 py-0.5 rounded-full font-semibold" style="background:var(--brand-lt);color:var(--brand)">{{ s.user_id }}</span>
+            </td>
+            <td class="py-2 font-medium" style="color:var(--text)">{{ s.name }}</td>
+            <td class="py-2">
+              <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold">Level {{ s.level }}</span>
+            </td>
+            <td class="py-2 text-xs" style="color:var(--muted)">{{ s.programme }}</td>
+            <td class="py-2 text-xs" style="color:var(--muted)">{{ s.academic_year }}</td>
+            <td class="py-2">
+              {% if s.created %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-semibold">New</span>
+              {% else %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold">Updated</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulk Question Upload - KAAF University{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold" style="color:var(--text)">Bulk Question Upload</h1>
+                <p class="text-sm mt-1" style="color:var(--muted)">Upload multiple questions at once using CSV or JSON</p>
+            </div>
+            <a href="{% url 'exams:exam_list' %}" class="px-4 py-2 rounded-lg border" style="border-color:var(--border);color:var(--text)">
+                Back to Exams
+            </a>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="mb-6 p-6 rounded-xl" style="background:var(--accent);border:1px solid var(--border)">
+        <h3 class="font-semibold mb-3 flex items-center gap-2" style="color:var(--text)">
+            <svg class="w-5 h-5" style="color:var(--brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            How to Upload Questions
+        </h3>
+        <ol class="space-y-2 text-sm" style="color:var(--muted)">
+            <li>1. Download a template file (CSV or JSON format)</li>
+            <li>2. Fill in your questions following the template format</li>
+            <li>3. Select the exam to add questions to</li>
+            <li>4. Upload your completed file</li>
+        </ol>
+    </div>
+
+    <!-- Download Templates -->
+    <div class="mb-6 card p-6">
+        <h3 class="font-semibold mb-4" style="color:var(--text)">📥 Download Template</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="{% url 'exams:download_question_template' 'csv' %}" 
+               class="flex items-center justify-between p-4 rounded-lg border hover:border-amber-500 transition-all"
+               style="border-color:var(--border)">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-medium" style="color:var(--text)">CSV Template</div>
+                        <div class="text-xs" style="color:var(--muted)">Excel-compatible format</div>
+                    </div>
+                </div>
+                <svg class="w-5 h-5" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+            </a>
+            
+            <a href="{% url 'exams:download_question_template' 'json' %}" 
+               class="flex items-center justify-between p-4 rounded-lg border hover:border-amber-500 transition-all"
+               style="border-color:var(--border)">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-medium" style="color:var(--text)">JSON Template</div>
+                        <div class="text-xs" style="color:var(--muted)">Structured data format</div>
+                    </div>
+                </div>
+                <svg class="w-5 h-5" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="card p-6">
+        <h3 class="font-semibold mb-4" style="color:var(--text)">📤 Upload Questions</h3>
+        
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Exam Selection -->
+            <div>
+                <label class="block text-sm font-semibold mb-2" style="color:var(--text)">
+                    Select Exam <span class="text-red-500">*</span>
+                </label>
+                {{ form.exam }}
+                {% if form.exam.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.exam.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs" style="color:var(--muted)">Questions will be added to this exam</p>
+            </div>
+
+            <!-- File Format -->
+            <div>
+                <label class="block text-sm font-semibold mb-2" style="color:var(--text)">
+                    File Format <span class="text-red-500">*</span>
+                </label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="file_format" value="csv" checked class="w-4 h-4" style="color:var(--brand)">
+                        <span class="text-sm" style="color:var(--text)">CSV</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="file_format" value="json" class="w-4 h-4" style="color:var(--brand)">
+                        <span class="text-sm" style="color:var(--text)">JSON</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- File Upload -->
+            <div>
+                <label class="block text-sm font-semibold mb-2" style="color:var(--text)">
+                    Upload File <span class="text-red-500">*</span>
+                </label>
+                <div class="border-2 border-dashed rounded-lg p-6 text-center" style="border-color:var(--border)">
+                    <input type="file" name="file" accept=".csv,.json" required
+                           class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
+                           style="color:var(--text)">
+                    <p class="mt-2 text-xs" style="color:var(--muted)">Max file size: 5MB</p>
+                </div>
+                {% if form.file.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.file.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex items-center gap-3 pt-4">
+                <button type="submit" 
+                        class="flex-1 px-6 py-3 rounded-lg font-semibold text-white transition-all hover:opacity-90"
+                        style="background:var(--brand)">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        Upload Questions
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Format Guide -->
+    <div class="mt-6 p-6 rounded-xl" style="background:var(--accent);border:1px solid var(--border)">
+        <h3 class="font-semibold mb-3" style="color:var(--text)">📋 CSV Format Guide</h3>
+        <div class="text-sm space-y-2" style="color:var(--muted)">
+            <p><strong>Columns:</strong></p>
+            <ul class="list-disc list-inside space-y-1 ml-2">
+                <li><code>question_text</code> - The question text (required)</li>
+                <li><code>question_type</code> - multiple_choice, true_false, fill_blank, short_answer, essay</li>
+                <li><code>marks</code> - Points for the question (default: 1)</li>
+                <li><code>order</code> - Display order (default: 0)</li>
+                <li><code>options</code> - Options separated by | (e.g., "A|B|C|D")</li>
+                <li><code>correct_answers</code> - Indices of correct options (e.g., "1" or "0,2")</li>
+                <li><code>expected_answer</code> - For fill_blank questions</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+select, input[type="file"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    width: 100%;
+}
+
+select:focus, input[type="file"]:focus {
+    outline: none;
+    border-color: var(--brand);
+    ring: 2px;
+    ring-color: var(--brand);
+}
+</style>
+{% endblock %}

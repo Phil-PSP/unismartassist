@@ -16,9 +16,9 @@ def dashboard_view(request):
 
     if user.is_student:
         context.update(_student_dashboard_data(user))
-    elif user.is_staff_member:
+    elif user.role == 'staff':
         context.update(_staff_dashboard_data(user))
-    elif user.is_admin:
+    elif user.role == 'admin':
         context.update(_admin_dashboard_data())
 
     # Common data

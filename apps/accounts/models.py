@@ -70,6 +70,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     mfa_enabled = models.BooleanField(default=False)
     mfa_secret = models.CharField(max_length=6, blank=True)
     mfa_secret_expires = models.DateTimeField(null=True, blank=True)
+    # Personal email for OTP (students use institutional email as login,
+    # but OTP is sent to their personal inbox)
+    personal_email = models.EmailField(blank=True, default='')
 
     objects = UserManager()
 

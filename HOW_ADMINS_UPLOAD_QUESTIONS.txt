@@ -1,0 +1,136 @@
+═══════════════════════════════════════════════════════════════
+  HOW ADMINS CAN UPLOAD QUESTIONS - QUICK GUIDE
+═══════════════════════════════════════════════════════════════
+
+✅ 4 METHODS AVAILABLE
+
+1. DJANGO ADMIN PANEL (Manual, One-by-One)
+   URL: http://127.0.0.1:8000/admin/
+   - Login as admin
+   - Go to "EXAMINATION SYSTEM" → "Exams"
+   - Add or edit exam
+   - Add questions inline
+   - Best for: Small number of questions, detailed control
+
+2. BULK UPLOAD - CSV (Excel/Google Sheets)
+   URL: http://127.0.0.1:8000/exams/questions/bulk-upload/
+   - Download CSV template
+   - Fill in Excel/Google Sheets
+   - Upload file
+   - Best for: Many questions, easy editing
+
+3. BULK UPLOAD - JSON (Structured Data)
+   URL: http://127.0.0.1:8000/exams/questions/bulk-upload/
+   - Download JSON template
+   - Create JSON file
+   - Upload file
+   - Best for: Programmatic generation, version control
+
+4. AI GENERATION (Automatic)
+   URL: http://127.0.0.1:8000/exams/ai/generate/
+   - Enter topic
+   - Set parameters
+   - AI generates questions
+   - Best for: Quick exam creation, any topic
+
+═══════════════════════════════════════════════════════════════
+  QUICK START - BULK UPLOAD (RECOMMENDED)
+═══════════════════════════════════════════════════════════════
+
+STEP 1: Download Template
+→ Go to: http://127.0.0.1:8000/exams/questions/bulk-upload/
+→ Click "CSV Template" or "JSON Template"
+
+STEP 2: Fill in Questions
+CSV Format:
+question_text,question_type,marks,order,options,correct_answers,expected_answer
+"What is 2+2?",multiple_choice,1,1,"2|3|4|5",2,
+"Python is easy.",true_false,1,2,"True|False",0,
+"Capital of France is _____.",fill_blank,1,3,,,Paris
+
+STEP 3: Upload
+→ Select exam from dropdown
+→ Choose file format (CSV or JSON)
+→ Upload file
+→ Click "Upload Questions"
+
+═══════════════════════════════════════════════════════════════
+  QUESTION TYPES
+═══════════════════════════════════════════════════════════════
+
+1. multiple_choice - 4 options, 1 correct (AUTO-GRADED ✅)
+2. true_false - True/False (AUTO-GRADED ✅)
+3. fill_blank - Text input (AUTO-GRADED ✅)
+4. short_answer - Text area (MANUAL GRADING ⚠️)
+5. essay - Large text area (MANUAL GRADING ⚠️)
+
+═══════════════════════════════════════════════════════════════
+  CSV FORMAT GUIDE
+═══════════════════════════════════════════════════════════════
+
+COLUMNS:
+- question_text: The question (required)
+- question_type: Type of question (required)
+- marks: Points (default: 1)
+- order: Display order (default: 0)
+- options: Options separated by | (for multiple_choice/true_false)
+- correct_answers: Index of correct option (0=first, 1=second, etc.)
+- expected_answer: For fill_blank questions
+
+EXAMPLES:
+
+Multiple Choice:
+"What is the capital of France?",multiple_choice,2,1,"London|Paris|Berlin|Madrid",1,
+
+True/False:
+"Python is a programming language.",true_false,1,2,"True|False",0,
+
+Fill in the Blank:
+"The capital of France is _____.",fill_blank,1,3,,,Paris
+
+Short Answer:
+"Explain OOP.",short_answer,5,4,,,
+
+═══════════════════════════════════════════════════════════════
+  ACCESS LINKS
+═══════════════════════════════════════════════════════════════
+
+Bulk Upload Page:
+http://127.0.0.1:8000/exams/questions/bulk-upload/
+
+CSV Template Download:
+http://127.0.0.1:8000/exams/questions/template/csv/
+
+JSON Template Download:
+http://127.0.0.1:8000/exams/questions/template/json/
+
+Admin Panel:
+http://127.0.0.1:8000/admin/
+
+AI Generator:
+http://127.0.0.1:8000/exams/ai/generate/
+
+═══════════════════════════════════════════════════════════════
+  TIPS
+═══════════════════════════════════════════════════════════════
+
+✓ Test with 5-10 questions first
+✓ Use quotes for text with commas
+✓ Separate options with | (pipe character)
+✓ Index starts at 0 (first option = 0)
+✓ Save CSV as UTF-8 encoding
+✓ Validate JSON before uploading
+✓ Review uploaded questions in admin
+
+═══════════════════════════════════════════════════════════════
+  BUTTON LOCATION
+═══════════════════════════════════════════════════════════════
+
+When logged in as admin/staff:
+→ Go to "Online Exams" page
+→ Look for "Bulk Upload Questions" button (top right)
+→ Purple button with upload icon
+
+═══════════════════════════════════════════════════════════════
+
+For detailed guide, see: ADMIN_QUESTION_UPLOAD_GUIDE.md

@@ -25,13 +25,17 @@ class LoginForm(forms.Form):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone', 'avatar', 'preferred_language']
+        fields = ['first_name', 'last_name', 'email', 'personal_email', 'phone', 'avatar', 'preferred_language']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-input'}),
             'last_name': forms.TextInput(attrs={'class': 'form-input'}),
             'email': forms.EmailInput(attrs={'class': 'form-input'}),
+            'personal_email': forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'e.g. yourname@gmail.com'}),
             'phone': forms.TextInput(attrs={'class': 'form-input'}),
             'preferred_language': forms.Select(attrs={'class': 'form-input'}),
+        }
+        labels = {
+            'personal_email': 'Personal Email (for OTP / MFA)',
         }
 
 

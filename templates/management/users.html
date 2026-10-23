@@ -1,24 +1,107 @@
 {% extends 'base.html' %}
+{% load query_tags %}
 {% block title %}User Management — Admin{% endblock %}
 {% block page_title %}User Management{% endblock %}
-{% block page_subtitle %}{{ total }} users found{% endblock %}
+{% block page_subtitle %}{{ total }} user{{ total|pluralize }} found{% endblock %}
 
 {% block content %}
 <div class="space-y-4">
 
-  <!-- Filters + Add button -->
-  <div class="flex flex-wrap items-center gap-3">
-    <form method="get" class="flex gap-2 flex-1 min-w-0">
-      <input name="q" value="{{ search }}" type="text" class="form-input max-w-xs" placeholder="Search name or ID...">
-      <select name="role" class="form-input w-36">
-        <option value="">All Roles</option>
-        <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Students</option>
-        <option value="staff" {% if role_filter == 'staff' %}selected{% endif %}>Staff</option>
-        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admins</option>
-      </select>
-      <button type="submit" class="btn btn-secondary">Filter</button>
+  <!-- Filter Bar -->
+  <div class="card p-4">
+    <form method="get" id="filter-form">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+
+        <!-- Search -->
+        <div class="lg:col-span-2">
+          <input name="q" value="{{ search }}" type="text"
+                 class="form-input w-full" placeholder="Search name, ID or email…">
+        </div>
+
+        <!-- Role -->
+        <select name="role" class="form-input" onchange="this.form.submit()">
+          <option value="">All Roles</option>
+          <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Students</option>
+          <option value="staff"   {% if role_filter == 'staff'   %}selected{% endif %}>Staff</option>
+          <option value="admin"   {% if role_filter == 'admin'   %}selected{% endif %}>Admins</option>
+        </select>
+
+        <!-- Level -->
+        <select name="level" class="form-input" onchange="this.form.submit()">
+          <option value="">All Levels</option>
+          {% for l in levels %}
+          <option value="{{ l }}" {% if level_filter == l|stringformat:'s' %}selected{% endif %}>Level {{ l }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- Department -->
+        <select name="dept" class="form-input" onchange="this.form.submit()">
+          <option value="">All Departments</option>
+          {% for dept in departments %}
+          <option value="{{ dept.id }}" {% if dept_filter == dept.id|stringformat:'s' %}selected{% endif %}>{{ dept.name }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- Faculty -->
+        <select name="faculty" class="form-input" onchange="this.form.submit()">
+          <option value="">All Faculties</option>
+          {% for fac in faculties %}
+          <option value="{{ fac }}" {% if faculty_filter == fac %}selected{% endif %}>{{ fac }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- Academic Year -->
+        <select name="year" class="form-input" onchange="this.form.submit()">
+          <option value="">All Years</option>
+          {% for yr in academic_years %}
+          <option value="{{ yr }}" {% if year_filter == yr %}selected{% endif %}>{{ yr }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- Sort -->
+        <select name="sort" class="form-input" onchange="this.form.submit()">
+          <option value="-date_joined"  {% if sort == '-date_joined'  %}selected{% endif %}>Newest First</option>
+          <option value="date_joined"   {% if sort == 'date_joined'   %}selected{% endif %}>Oldest First</option>
+          <option value="user_id"       {% if sort == 'user_id'       %}selected{% endif %}>Index No ↑</option>
+          <option value="-user_id"      {% if sort == '-user_id'      %}selected{% endif %}>Index No ↓</option>
+          <option value="name"          {% if sort == 'name'          %}selected{% endif %}>Name A → Z</option>
+          <option value="-name"         {% if sort == '-name'         %}selected{% endif %}>Name Z → A</option>
+        </select>
+
+        <!-- Buttons -->
+        <div class="flex gap-2 lg:col-span-2">
+          <button type="submit" class="btn btn-primary flex-1">Apply</button>
+          <a href="{% url 'admin_users' %}" class="btn btn-secondary flex-1">Clear</a>
+        </div>
+
+      </div>
+
+      <!-- Active filter chips -->
+      {% if role_filter or level_filter or dept_filter or faculty_filter or year_filter or search %}
+      <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid var(--border)">
+        <span class="text-xs font-semibold" style="color:var(--muted)">Active filters:</span>
+        {% if search %}<span class="chip">Search: "{{ search }}"</span>{% endif %}
+        {% if role_filter %}<span class="chip">Role: {{ role_filter|capfirst }}</span>{% endif %}
+        {% if level_filter %}<span class="chip">Level {{ level_filter }}</span>{% endif %}
+        {% if dept_filter %}
+          {% for dept in departments %}{% if dept.id|stringformat:'s' == dept_filter %}<span class="chip">Dept: {{ dept.name }}</span>{% endif %}{% endfor %}
+        {% endif %}
+        {% if faculty_filter %}<span class="chip">Faculty: {{ faculty_filter }}</span>{% endif %}
+        {% if year_filter %}<span class="chip">Year: {{ year_filter }}</span>{% endif %}
+      </div>
+      {% endif %}
     </form>
-    <a href="{% url 'admin_add_user' %}" class="btn btn-primary">+ Add User</a>
+  </div>
+
+  <!-- Action bar -->
+  <div class="flex items-center justify-between">
+    <p class="text-sm" style="color:var(--muted)">
+      Showing <strong style="color:var(--text)">{{ users|length }}</strong> of <strong style="color:var(--text)">{{ total }}</strong> users
+    </p>
+    <div class="flex gap-2">
+      <a href="{% url 'admin_import_students' %}" class="btn btn-secondary text-sm">📥 Import PDF</a>
+      <a href="{% url 'admin_add_user' %}" class="btn btn-primary text-sm">+ Add User</a>
+    </div>
   </div>
 
   <!-- Table -->
@@ -27,11 +110,26 @@
       <table class="w-full text-sm">
         <thead style="background:var(--bg);border-bottom:1px solid var(--border)">
           <tr>
-            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">User</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">ID</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">#</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">
+              <a href="?{% url_replace request 'sort' 'name' %}" class="hover:underline flex items-center gap-1">
+                Name {% if sort == 'name' %}↑{% elif sort == '-name' %}↓{% endif %}
+              </a>
+            </th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">
+              <a href="?{% url_replace request 'sort' 'user_id' %}" class="hover:underline flex items-center gap-1">
+                Index No {% if sort == 'user_id' %}↑{% elif sort == '-user_id' %}↓{% endif %}
+              </a>
+            </th>
             <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Role</th>
             <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Email</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Joined</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Dept / Level</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Year</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">
+              <a href="?{% url_replace request 'sort' 'date_joined' %}" class="hover:underline flex items-center gap-1">
+                Joined {% if sort == 'date_joined' %}↑{% elif sort == '-date_joined' %}↓{% endif %}
+              </a>
+            </th>
             <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Status</th>
             <th class="text-left px-4 py-3 text-xs font-semibold" style="color:var(--muted)">Actions</th>
           </tr>
@@ -39,22 +137,38 @@
         <tbody class="divide-y" style="border-color:var(--border)">
           {% for u in users %}
           <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors" id="user-row-{{ u.id }}">
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ forloop.counter }}</td>
             <td class="px-4 py-3">
               <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 grad-brand rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{{ u.first_name|first }}</div>
+                <div class="w-7 h-7 grad-brand rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{{ u.first_name|first }}</div>
                 <span class="font-medium" style="color:var(--text)">{{ u.get_full_name }}</span>
               </div>
             </td>
-            <td class="px-4 py-3 text-xs font-mono" style="color:var(--muted)">{{ u.user_id }}</td>
+            <td class="px-4 py-3 text-xs font-mono font-semibold" style="color:var(--brand)">{{ u.user_id }}</td>
             <td class="px-4 py-3">
               <span class="text-xs px-2 py-0.5 rounded-full font-medium
-                {% if u.role == 'student' %}bg-blue-50 text-blue-600
-                {% elif u.role == 'staff' %}bg-emerald-50 text-emerald-600
-                {% else %}bg-purple-50 text-purple-600{% endif %}">
+                {% if u.role == 'student' %}bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400
+                {% elif u.role == 'staff' %}bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400
+                {% else %}bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400{% endif %}">
                 {{ u.role|capfirst }}
               </span>
             </td>
             <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ u.email }}</td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">
+              {% if u.role == 'student' %}
+                {% with p=u.student_profile %}
+                  {% if p %}
+                    <span class="font-medium" style="color:var(--text)">{{ p.programme.department.name|default:"—" }}</span>
+                    <span class="ml-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-bold">L{{ p.level }}</span>
+                  {% else %}—{% endif %}
+                {% endwith %}
+              {% else %}—{% endif %}
+            </td>
+            <td class="px-4 py-3 text-xs" style="color:var(--muted)">
+              {% if u.role == 'student' %}
+                {% with p=u.student_profile %}{{ p.academic_year|default:"—" }}{% endwith %}
+              {% else %}—{% endif %}
+            </td>
             <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{ u.date_joined|date:"M d, Y" }}</td>
             <td class="px-4 py-3">
               <span class="w-2 h-2 rounded-full inline-block {% if u.is_active %}bg-emerald-500{% else %}bg-red-400{% endif %}"></span>
@@ -75,17 +189,23 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="7" class="px-4 py-8 text-center text-sm" style="color:var(--muted)">No users found.</td></tr>
+          <tr><td colspan="10" class="px-4 py-10 text-center text-sm" style="color:var(--muted)">No users match the current filters.</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
+    {% if total > 200 %}
+    <div class="px-4 py-3 text-xs text-center" style="color:var(--muted);border-top:1px solid var(--border)">
+      Showing first 200 results. Use filters to narrow down.
+    </div>
+    {% endif %}
   </div>
 </div>
 
 <!-- Reset password modal -->
 <div id="pwdModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,.5)">
-  <div class="card w-full max-w-sm mx-4">
+  <div class="card w-full max-w-sm mx-4 p-6">
     <h3 class="font-semibold mb-4" style="color:var(--text)">Reset Password</h3>
     <input id="newPwd" type="password" class="form-input mb-4" placeholder="New password (min 6 chars)">
     <div class="flex gap-2">
@@ -94,6 +214,15 @@
     </div>
   </div>
 </div>
+
+<style>
+.chip {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 10px; border-radius:99px; font-size:.7rem; font-weight:600;
+  background:var(--brand-lt); color:var(--brand);
+  border:1px solid rgba(200,133,0,.2);
+}
+</style>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -105,9 +234,10 @@ function toggleUser(id, btn) {
   fetch(`/manage/users/${id}/toggle/`, { method:'POST', headers:{'X-CSRFToken':CSRF} })
     .then(r=>r.json()).then(d=>{
       btn.textContent = d.is_active ? 'Deactivate' : 'Activate';
-      const dot = document.querySelector(`#user-row-${id} .rounded-full`);
-      const label = document.querySelector(`#user-row-${id} .text-xs.ml-1`);
-      if (dot) { dot.className = `w-2 h-2 rounded-full inline-block ${d.is_active ? 'bg-emerald-500' : 'bg-red-400'}`; }
+      const row = document.getElementById(`user-row-${id}`);
+      const dot = row.querySelector('.rounded-full.inline-block');
+      const label = row.querySelector('.text-xs.ml-1');
+      if (dot) dot.className = `w-2 h-2 rounded-full inline-block ${d.is_active ? 'bg-emerald-500' : 'bg-red-400'}`;
       if (label) label.textContent = d.is_active ? 'Active' : 'Inactive';
     });
 }
@@ -120,6 +250,7 @@ function resetPwd(id) {
 
 function submitReset() {
   const pwd = document.getElementById('newPwd').value;
+  if (pwd.length < 6) { alert('Password must be at least 6 characters.'); return; }
   fetch(`/manage/users/${resetUserId}/reset-password/`, {
     method:'POST',
     headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},

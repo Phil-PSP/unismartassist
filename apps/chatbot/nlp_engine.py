@@ -222,9 +222,10 @@ STRICT RULES — follow these exactly:
 4. For questions about OTHER universities (UG, KNUST, UCC, etc.) — answer them accurately using your general knowledge. Do NOT pretend they are asking about KAAF.
 5. For general knowledge questions (science, history, math, etc.) — answer them accurately and helpfully. You are a full AI assistant, not just a campus bot.
 6. For mental health distress — always include: {', '.join(UNIVERSITY_KB['crisis_lines'])}
-7. Keep responses concise — under 250 words unless the user asks for detail
-8. Use markdown: **bold** for key info, bullet points for lists, emojis sparingly
-9. End with one short follow-up suggestion when relevant
+7. **ALWAYS provide COMPLETE, DETAILED responses** — don't cut off mid-sentence. Finish your thoughts fully.
+8. When giving advice or explanations, provide 3-5 specific, actionable points
+9. Use markdown: **bold** for key info, bullet points for lists, emojis sparingly
+10. End with one short follow-up suggestion when relevant
 
 KAAF UNIVERSITY FACTS (verified from kaafuni.edu.gh):
 - Full name: KAAF University (formerly KAAF University College)
@@ -299,6 +300,68 @@ ESCALATION:
 - Mental health → {UNIVERSITY_KB['contacts']['counseling']}
 - Technical → {UNIVERSITY_KB['contacts']['it_support']}
 - Transcript → {UNIVERSITY_KB['contacts']['registrar']}
+
+2025/2026 ACADEMIC CALENDAR (Official — KAAF University):
+
+FIRST SEMESTER:
+- System opens for registration: 22 Aug – 14 Sep 2025
+- Re-opening / Arrival of students: 5 Sep 2025
+- Lectures begin (Regular): 15 Sep 2025 | (Weekend): 19 Sep 2025
+- Late registration (with fine): 22 Sep – 5 Oct 2025
+- Registration ends: 5 Oct 2025
+- Orientation / Medical / ID Cards (Fresh students): 22–28 Sep 2025
+- Matriculation: 18 Oct 2025
+- Congregation / Graduation: 31 Oct 2025
+- Mid-Semester Assessment (Regular): 27–31 Oct 2025
+- Mid-Semester Assessment (Weekend): 31 Oct – 2 Nov 2025
+- Moderation of Questions: 10–16 Nov 2025
+- Lectures end (all students): 20 Nov 2025
+- Revision Week: 21–27 Nov 2025
+- End of First Semester Exams: 28 Nov – 21 Dec 2025
+- Christmas / Semester Break: 22 Dec 2025 – 11 Jan 2026
+
+SECOND SEMESTER (JANUARY INTAKE):
+- Re-opening (continuing students): 9 Jan 2026
+- Lectures begin (Regular): 12 Jan 2026 | (Weekend): 16 Jan 2026
+- Late registration (with fine): 26 Jan – 1 Feb 2026
+- Registration ends: 2 Feb 2026
+- Orientation (February admissions): 9–14 Feb 2026
+- Matriculation: 20 Feb 2026
+- Mid-Semester Assessment (Weekend): 27 Feb – 1 Mar 2026
+- Moderation of Questions: 9–15 Mar 2026
+- Mid-Semester Assessment (Regular): 23–27 Mar 2026
+- SRC & PUSAG Week: March 2026
+- Lectures end (all students): 29 Mar 2026
+- Revision Week: 30 Mar – 5 Apr 2026
+- End of Second Semester Exams: 6–26 Apr 2026
+- Semester Break: from 27 Apr 2026
+
+FEBRUARY SECOND SEMESTER (2025/2026) - Alternative Intake:
+- Opening of System for Registration: Friday 8 May 2026
+- Lectures begin for Regular Students: Monday 18 May 2026
+- Lectures begin for Weekend Students: Friday 22 May 2026
+- Departmental Board Meeting: Wednesday 27 May 2026
+- Faculty Board Meeting: Friday 29 May 2026
+- Academic Board Meeting: Wednesday 10 June 2026
+- Late Registration (with fine): Monday 8 June 2026
+- Mid-Semester Assessment for All Students: Monday 22 June – Sunday 5 July 2026
+- Moderation of Examination Questions: Monday 6 July – Sunday 12 July 2026
+- Lectures End for ALL Students: Sunday 26 July 2026
+- Revision Week for ALL Students: Monday 27 July – Sunday 2 August 2026
+- End of First Semester Exams for all students: Friday 31 July – Sunday 16 August 2026
+- Semester Break for ALL Programmes: Monday 17 August 2026 – *** September 2026
+
+PUBLIC HOLIDAYS 2026:
+- Independence Day: 6 Mar 2026
+- Good Friday: 3 Apr 2026
+- Easter Monday: 6 Apr 2026
+- May Day: 1 May 2026
+- Africa Unity Day: 25 May 2026
+- Republic Day: 1 Jul 2026
+- Founder's Day: 4 Aug 2026
+- Kwame Nkrumah Memorial Day: 21 Sep 2026
+- Farmer's Day: 4 Dec 2026
+- Christmas Day: 25 Dec 2026
 """
 
     # Role-specific live data
@@ -480,6 +543,7 @@ def call_gemini(system_prompt, conversation_history, user_message):
     import time
     api_key = getattr(settings, 'GEMINI_API_KEY', '')
     if not api_key:
+        print("❌ No Gemini API key found")
         return None
 
     contents = []
@@ -492,9 +556,9 @@ def call_gemini(system_prompt, conversation_history, user_message):
         'system_instruction': {'parts': [{'text': system_prompt}]},
         'contents': contents,
         'generationConfig': {
-            'maxOutputTokens': 450,
-            'temperature': 0.65,
-            'topP': 0.9,
+            'maxOutputTokens': 2048,  # Increased to 2048 for very detailed responses
+            'temperature': 0.7,  # Slightly increased for more natural responses
+            'topP': 0.95,
         },
         'safetySettings': [
             {'category': 'HARM_CATEGORY_HARASSMENT', 'threshold': 'BLOCK_ONLY_HIGH'},
@@ -502,23 +566,32 @@ def call_gemini(system_prompt, conversation_history, user_message):
         ]
     }).encode('utf-8')
 
-    # Try models in order of preference
-    models = ['gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-2.5-flash']
+    # Try models in order of preference (using correct model names)
+    models = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite']
     for model in models:
         url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}'
         req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/json'}, method='POST')
         try:
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            print(f"🔄 Trying Gemini model: {model}")
+            with urllib.request.urlopen(req, timeout=30) as resp:  # Increased to 30 seconds for detailed responses
                 data = json.loads(resp.read().decode('utf-8'))
                 candidates = data.get('candidates', [])
                 if candidates:
-                    return candidates[0]['content']['parts'][0]['text'].strip()
+                    response = candidates[0]['content']['parts'][0]['text'].strip()
+                    print(f"✅ {model} responded successfully")
+                    return response
+                else:
+                    print(f"⚠️ {model} returned no candidates")
         except urllib.error.HTTPError as e:
-            if e.code == 429:
-                continue  # Try next model
+            error_body = e.read().decode('utf-8')
+            print(f"❌ {model} HTTP Error {e.code}: {error_body[:200]}")
+            # Try next model for 429 (quota) or 503 (overload)
+            if e.code in [429, 503]:
+                continue
             break
-        except Exception:
-            break
+        except Exception as e:
+            print(f"❌ {model} Exception: {type(e).__name__}: {e}")
+            continue  # Try next model on any exception
     return None
 
 
@@ -647,19 +720,30 @@ Type anything and I'll do my best to help!"""
     def process(self, message, session_context=None):
         """
         Process a message and return a response dict.
+        AI-FIRST APPROACH: Try Gemini AI first, fall back to handlers if AI fails.
         Returns: {'response': str, 'intent': str, 'data': dict, 'mode': str}
         """
+        # Try AI first (unless offline)
+        if not self.offline:
+            print(f"💬 Processing message: {message[:50]}...")
+            ai_response = self._try_ai_fallback(message, session_context)
+            if ai_response:
+                print(f"✅ AI responded successfully")
+                return {
+                    'response': ai_response,
+                    'data': {},
+                    'mode': 'general',
+                    'ai_powered': True,
+                    'intent': 'ai_handled',
+                    'confidence': 1.0
+                }
+            else:
+                print(f"⚠️ AI failed, falling back to built-in handlers")
+        
+        # AI failed or offline - use built-in handlers
         intent, confidence = self.nlp.match_intent(message)
         entities = self.nlp.extract_entities(message)
         tag = intent['tag']
-
-        # If the query mentions another institution, force AI fallback
-        # regardless of keyword match
-        if self._is_external_query(message):
-            ai_response = self._try_ai_fallback(message, session_context)
-            if ai_response:
-                return {'response': ai_response, 'data': {}, 'mode': 'general',
-                        'ai_powered': True, 'intent': 'external', 'confidence': 0.0}
 
         # Route to specialized handlers
         handlers = {
@@ -714,16 +798,11 @@ Type anything and I'll do my best to help!"""
         if tag in handlers:
             response_data = handlers[tag](entities, session_context)
         else:
+            # No handler found - show offline fallback
             if self.offline:
-                # Offline — give a helpful local response without calling AI
                 response_data = self._handle_offline_unknown(message)
             else:
-                # unknown intent or low-confidence match — try AI first
-                ai_response = self._try_ai_fallback(message, session_context)
-                if ai_response:
-                    response_data = {'response': ai_response, 'data': {}, 'mode': 'general', 'ai_powered': True}
-                else:
-                    response_data = {'response': self._offline_fallback_text(message), 'data': {}}
+                response_data = {'response': self._offline_fallback_text(message), 'data': {}}
 
         response_data['intent'] = tag
         response_data['confidence'] = round(confidence, 2)
@@ -759,9 +838,16 @@ Type anything and I'll do my best to help!"""
         try:
             system_prompt = build_system_prompt(self.user)
             history = get_conversation_history(self.session) if self.session else []
-            return call_gemini(system_prompt, history, message) or \
-                   call_openai(system_prompt, history, message)
-        except Exception:
+            result = call_gemini(system_prompt, history, message)
+            if result:
+                return result
+            # Try OpenAI as fallback
+            return call_openai(system_prompt, history, message)
+        except Exception as e:
+            # Log the error for debugging
+            import traceback
+            print(f"AI Fallback Error: {e}")
+            traceback.print_exc()
             return None
 
     def _handle_offline_unknown(self, message):
