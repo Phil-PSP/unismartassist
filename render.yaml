@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: unismartassist
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: security/phase1-credentials-mfa-settings
+    autoDeployTrigger: off
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    preDeployCommand: python manage.py migrate --noinput
+    startCommand: daphne -b 0.0.0.0 -p $PORT kaaf.asgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DJANGO_ALLOW_INSECURE_DEBUG
+        value: "False"
+      - key: TRUST_X_FORWARDED_PROTO
+        value: "True"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: DATABASE_URL
+        sync: false
