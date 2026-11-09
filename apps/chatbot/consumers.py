@@ -2,6 +2,7 @@
 WebSocket Consumer for real-time chat
 """
 import json
+from django.core.cache import cache
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
@@ -29,7 +30,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         """Handle incoming message from WebSocket"""
         try:
+            if not text_data or len(text_data) > 8192:
+                await self.send(text_data=json.dumps({'type': 'error', 'message': 'Message payload is too large.'}))
+                return
             data = json.loads(text_data)
+            if not isinstance(data, dict):
+                raise ValueError('Expected a JSON object')
+            if not await self.allow_message():
+                await self.send(text_data=json.dumps({'type': 'error', 'message': 'You are sending messages too quickly. Please wait.'}))
+                return
             msg_type = data.get('type', 'message')
             message = data.get('message', '').strip()
             session_id = data.get('session_id')
@@ -41,7 +50,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             if not message:
                 return
-
+            if len(message) > 4000:
+                await self.send(text_data=json.dumps({'type': 'error', 'message': 'Message is too long.'}))
+                return
             # Use session_id from init or from this message
             effective_session_id = session_id or getattr(self, '_session_id', None)
             # FORCE ONLINE MODE FOR NGROK - Remove this line to restore offline detection
@@ -67,11 +78,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'timestamp': timezone.now().isoformat(),
             }))
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError, AttributeError):
             await self.send(text_data=json.dumps({
                 'type': 'error',
                 'message': 'Invalid message format.',
             }))
+
+
+    @database_sync_to_async
+    def allow_message(self):
+        """Limit each authenticated user to 20 WebSocket messages per minute."""
+        key = f"chat-ws-rate:{self.user.pk}"
+        if cache.add(key, 1, timeout=60):
+            return True
+        try:
+            count = cache.incr(key)
+        except ValueError:
+            cache.set(key, 1, timeout=60)
+            count = 1
+        return count <= 20
 
     @database_sync_to_async
     def process_message(self, message, session_id=None, offline=False):

@@ -60,6 +60,7 @@ class Exam(models.Model):
     shuffle_questions = models.BooleanField(default=True)
     shuffle_options = models.BooleanField(default=True)
     show_results_immediately = models.BooleanField(default=False)
+    results_released = models.BooleanField(default=False, help_text='Release results to students when immediate results are disabled.')
     allow_review = models.BooleanField(default=True, help_text="Allow students to review after submission")
     max_attempts = models.IntegerField(default=1, validators=[MinValueValidator(1)])
     

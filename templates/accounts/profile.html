@@ -116,6 +116,8 @@
     </div>
     <form method="post" action="{% url 'mfa_toggle' %}">
       {% csrf_token %}
+      <label class="sr-only" for="mfa-current-password">Current password</label>
+      <input id="mfa-current-password" type="password" name="password" required autocomplete="current-password" placeholder="Confirm current password" class="form-input mb-2">
       {% if user.mfa_enabled %}
         <input type="hidden" name="action" value="disable">
         <button type="submit" class="btn btn-secondary text-sm" style="color:#ef4444;border-color:#fecaca">Disable MFA</button>

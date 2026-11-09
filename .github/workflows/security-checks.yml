@@ -1,0 +1,52 @@
+name: Security and Django checks
+
+on:
+  push:
+    branches:
+      - main
+      - security/**
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  django-checks:
+    runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: "ci-only-not-for-production-${{ github.run_id }}-0123456789-abcdefghijklmnopqrstuvwxyz"
+      DEBUG: "False"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      SESSION_COOKIE_SECURE: "False"
+      CSRF_COOKIE_SECURE: "False"
+      SECURE_SSL_REDIRECT: "False"
+      TRUST_X_FORWARDED_PROTO: "False"
+      EMAIL_HOST_USER: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Django system check
+        run: python manage.py check
+      - name: Check migration consistency
+        run: python manage.py makemigrations --check --dry-run
+      - name: Run tests
+        run: python manage.py test
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pip-audit
+        run: python -m pip install --upgrade pip pip-audit
+      - name: Audit pinned dependencies
+        run: pip-audit -r requirements.txt

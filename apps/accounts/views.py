@@ -2,39 +2,17 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
+from django.core.cache import cache
+import hashlib
 from django.utils import timezone
-from datetime import timedelta
-import random
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.db import transaction
+import re
 from .forms import LoginForm, UserProfileForm, ChangePasswordForm, SignupForm
 from .models import ActivityLog, User
-
-
-def _generate_otp():
-    return str(random.randint(100000, 999999))
-
-
-def _send_otp_email(user, otp):
-    from django.core.mail import send_mail
-    # Send to personal email if set, otherwise fall back to account email
-    recipient = user.personal_email if user.personal_email else user.email
-    try:
-        send_mail(
-            subject='KAAF University — Your Login OTP',
-            message=(
-                f"Hello {user.first_name},\n\n"
-                f"Your one-time password (OTP) for KAAF University login is:\n\n"
-                f"  {otp}\n\n"
-                f"This code expires in 10 minutes. Do not share it with anyone.\n\n"
-                f"If you did not request this, please ignore this email.\n\n"
-                f"KAAF University Smart Assistant"
-            ),
-            from_email='noreply@kaafuni.edu.gh',
-            recipient_list=[recipient],
-            fail_silently=True,
-        )
-    except Exception:
-        pass
+from .mfa import issue_otp, verify_otp
 
 
 def login_view(request):
@@ -42,18 +20,31 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
+    ip_address = request.META.get('REMOTE_ADDR', 'unknown')
+    rate_key = 'login-failures:' + hashlib.sha256(ip_address.encode('utf-8')).hexdigest()
+    if request.method == 'POST' and cache.get(rate_key, 0) >= 10:
+        form = LoginForm(request.POST)
+        form.add_error(None, 'Too many failed login attempts. Please wait 15 minutes before trying again.')
+        return render(request, 'accounts/login.html', {'form': form}, status=429)
+
     form = LoginForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
+        cache.delete(rate_key)
         user = form.cleaned_data['user']
 
         if user.mfa_enabled:
             # Generate OTP and store in session
-            otp = _generate_otp()
-            user.mfa_secret = otp
-            user.mfa_secret_expires = timezone.now() + timedelta(minutes=10)
-            user.save(update_fields=['mfa_secret', 'mfa_secret_expires'])
-            _send_otp_email(user, otp)
+            try:
+                issue_otp(user, enforce_cooldown=True)
+            except ValueError:
+                messages.warning(request, 'Please wait before requesting another verification code.')
+                return redirect('login')
+            except Exception:
+                messages.error(request, 'Unable to send a verification code. Please try again later.')
+                return redirect('login')
             request.session['mfa_user_id'] = user.id
+            request.session['mfa_started_at'] = timezone.now().timestamp()
+            request.session['mfa_next'] = request.GET.get('next', '')
             request.session.save()
             return redirect('mfa_verify')
 
@@ -66,27 +57,44 @@ def login_view(request):
             ip_address=request.META.get('REMOTE_ADDR'),
         )
         messages.success(request, f'Welcome back, {user.first_name}!')
-        return redirect(request.GET.get('next', 'dashboard'))
+        next_url = request.GET.get('next', '')
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+            return redirect(next_url)
+        return redirect('dashboard')
 
+    if request.method == 'POST':
+        if not cache.add(rate_key, 1, timeout=900):
+            try:
+                cache.incr(rate_key)
+            except ValueError:
+                cache.set(rate_key, 1, timeout=900)
     return render(request, 'accounts/login.html', {'form': form})
 
 
+@require_POST
 def mfa_resend_view(request):
     """Resend OTP to the user's email."""
     user_id = request.session.get('mfa_user_id')
     if not user_id:
         return redirect('login')
     try:
-        user = User.objects.get(id=user_id)
+        user = User.objects.get(id=user_id, is_active=True, mfa_enabled=True)
     except User.DoesNotExist:
+        request.session.pop('mfa_user_id', None)
+        request.session.pop('mfa_started_at', None)
+        request.session.pop('mfa_next', None)
         return redirect('login')
 
-    otp = _generate_otp()
-    user.mfa_secret = otp
-    user.mfa_secret_expires = timezone.now() + timedelta(minutes=10)
-    user.save(update_fields=['mfa_secret', 'mfa_secret_expires'])
-    _send_otp_email(user, otp)
+    try:
+        issue_otp(user, enforce_cooldown=True)
+    except ValueError:
+        messages.warning(request, 'Please wait at least 60 seconds before requesting another code.')
+        return redirect('mfa_verify')
+    except Exception:
+        messages.error(request, 'Unable to send a new code. Please try again later.')
+        return redirect('mfa_verify')
     request.session['mfa_resent'] = True
+    request.session['mfa_started_at'] = timezone.now().timestamp()
     request.session.save()
     return redirect('mfa_verify')
 
@@ -101,107 +109,43 @@ def mfa_verify_view(request):
     except User.DoesNotExist:
         return redirect('login')
 
-    error = None
-    if request.method == 'POST':
-        otp_entered = request.POST.get('otp', '').strip()
-        if (user.mfa_secret == otp_entered and
-                user.mfa_secret_expires and
-                timezone.now() <= user.mfa_secret_expires):
-            user.mfa_secret = ''
-            user.mfa_secret_expires = None
-            user.save(update_fields=['mfa_secret', 'mfa_secret_expires'])
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
-            login(request, user)
-            request.session['_auth_user_id'] = str(user.pk)
-            request.session['_auth_user_backend'] = 'django.contrib.auth.backends.ModelBackend'
-            request.session.pop('mfa_user_id', None)
-            request.session.pop('dev_otp', None)
-            request.session.modified = True
-            request.session.save()
-            ActivityLog.objects.create(
-                user=user, action='login',
-                description='User logged in with MFA',
-                ip_address=request.META.get('REMOTE_ADDR'),
-            )
-            messages.success(request, f'Welcome back, {user.first_name}!')
-            return redirect('dashboard')
-        elif user.mfa_secret_expires and timezone.now() > user.mfa_secret_expires:
-            error = 'OTP has expired. Please log in again.'
-            request.session.pop('mfa_user_id', None)
-            request.session.pop('dev_otp', None)
-            return redirect('login')
-        else:
-            error = 'Invalid OTP. Please try again.'
-
-    from django.conf import settings as django_settings
-    dev_otp = request.session.get('dev_otp') if django_settings.DEBUG else None
-    otp_email = user.personal_email if user.personal_email else user.email
-    email_hint = f"{otp_email[:3]}***@{otp_email.split('@')[1]}"
-    resent = request.session.pop('mfa_resent', False)
-    request.session.save()
-
-    return render(request, 'accounts/mfa_verify.html', {
-        'user': user, 'error': error,
-        'email_hint': email_hint,
-        'dev_otp': dev_otp,
-        'resent': resent,
-    })
-    """Verify OTP for MFA login."""
-    user_id = request.session.get('mfa_user_id')
-    if not user_id:
+    if not user.is_active or not user.mfa_enabled:
+        request.session.pop('mfa_user_id', None)
+        request.session.pop('mfa_started_at', None)
+        request.session.pop('mfa_next', None)
         return redirect('login')
+
+    started_at = request.session.get('mfa_started_at')
     try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
+        challenge_expired = not started_at or timezone.now().timestamp() - float(started_at) > 600
+    except (TypeError, ValueError):
+        challenge_expired = True
+    if challenge_expired:
+        request.session.pop('mfa_user_id', None)
+        request.session.pop('mfa_started_at', None)
+        request.session.pop('mfa_next', None)
         return redirect('login')
 
     error = None
     if request.method == 'POST':
-        otp_entered = request.POST.get('otp', '').strip()
-        if (user.mfa_secret == otp_entered and
-                user.mfa_secret_expires and
-                timezone.now() <= user.mfa_secret_expires):
-            # Clear OTP from DB
-            user.mfa_secret = ''
-            user.mfa_secret_expires = None
-            user.save(update_fields=['mfa_secret', 'mfa_secret_expires'])
-            # Must set backend before login() when AUTHENTICATION_BACKENDS is explicit
+        valid, error = verify_otp(user, request.POST.get('otp', ''))
+        if valid:
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
-            request.session['_auth_user_id'] = str(user.pk)
-            request.session['_auth_user_backend'] = 'django.contrib.auth.backends.ModelBackend'
             request.session.pop('mfa_user_id', None)
-            request.session.pop('dev_otp', None)
-            request.session.modified = True
-            request.session.save()
-            ActivityLog.objects.create(
-                user=user, action='login',
-                description='User logged in with MFA',
-                ip_address=request.META.get('REMOTE_ADDR'),
-            )
-            messages.success(request, f'Welcome back, {user.first_name}!')
+            request.session.pop('mfa_started_at', None)
+            request.session.pop('mfa_resent', None)
+            next_url = request.session.pop('mfa_next', '')
+            ActivityLog.objects.create(user=user, action='login', description='User logged in with MFA', ip_address=request.META.get('REMOTE_ADDR'))
+            messages.success(request, 'Welcome back, {}!'.format(user.first_name))
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+                return redirect(next_url)
             return redirect('dashboard')
-        elif user.mfa_secret_expires and timezone.now() > user.mfa_secret_expires:
-            error = 'OTP has expired. Please log in again.'
-            request.session.pop('mfa_user_id', None)
-            request.session.pop('dev_otp', None)
-            return redirect('login')
-        else:
-            error = 'Invalid OTP. Please try again.'
 
-    from django.conf import settings as django_settings
-    dev_otp = request.session.get('dev_otp') if django_settings.DEBUG else None
     otp_email = user.personal_email if user.personal_email else user.email
-    email_hint = f"{otp_email[:3]}***@{otp_email.split('@')[1]}"
+    email_hint = '{}***@{}'.format(otp_email[:3], otp_email.split('@')[1]) if '@' in otp_email else '***'
     resent = request.session.pop('mfa_resent', False)
-    request.session.save()
-
-    return render(request, 'accounts/mfa_verify.html', {
-        'user': user, 'error': error,
-        'email_hint': email_hint,
-        'dev_otp': dev_otp,
-        'resent': resent,
-    })
+    return render(request, 'accounts/mfa_verify.html', {'user': user, 'error': error, 'email_hint': email_hint, 'dev_otp': None, 'resent': resent})
 
 
 @login_required
@@ -210,6 +154,9 @@ def mfa_toggle_view(request):
     user = request.user
     if request.method == 'POST':
         action = request.POST.get('action')
+        if action in ['enable', 'disable'] and not user.check_password(request.POST.get('password', '')):
+            messages.error(request, 'Enter your current password to change MFA settings.')
+            return redirect('profile')
         if action == 'enable' and not user.mfa_enabled:
             user.mfa_enabled = True
             user.save(update_fields=['mfa_enabled'])
@@ -217,21 +164,23 @@ def mfa_toggle_view(request):
         elif action == 'disable' and user.mfa_enabled:
             user.mfa_enabled = False
             user.mfa_secret = ''
-            user.save(update_fields=['mfa_enabled', 'mfa_secret'])
+            user.mfa_secret_expires = None
+            user.mfa_attempts = 0
+            user.mfa_last_sent_at = None
+            user.save(update_fields=['mfa_enabled', 'mfa_secret', 'mfa_secret_expires', 'mfa_attempts', 'mfa_last_sent_at'])
             messages.success(request, 'Two-factor authentication disabled.')
         return redirect('profile')
     return redirect('profile')
 
 
 def signup_view(request):
-    """Self-registration for new students."""
+    """Collect a registration request; an administrator must verify identity before activation."""
     if request.user.is_authenticated:
         return redirect('dashboard')
 
-    from apps.students.models import StudentProfile, Programme, Department
+    from apps.students.models import StudentProfile, Programme
 
-    # Real KAAF intake types
-    INTAKE_CHOICES = [
+    intake_choices = [
         ('february', 'February Intake'),
         ('september', 'September Intake'),
         ('sandwich', 'Sandwich Programme'),
@@ -239,63 +188,84 @@ def signup_view(request):
         ('direct_entry', 'Direct Entry (Level 200/300)'),
         ('access_course', 'Access Course (Nursing)'),
     ]
-
     programmes = Programme.objects.select_related('department').order_by('department__faculty', 'name')
-
     form = SignupForm(request.POST or None)
+
     if request.method == 'POST' and form.is_valid():
-        d = form.cleaned_data
-        user = User.objects.create_user(
-            user_id=d['user_id'],
-            email=d['email'],
-            first_name=d['first_name'],
-            last_name=d['last_name'],
-            phone=d.get('phone', ''),
-            role=User.STUDENT,
-            password=d['password'],
-            preferred_language=request.POST.get('preferred_language', 'English'),
-        )
-        # Determine level from form or intake type
         intake = request.POST.get('intake', 'september')
-        level_from_form = request.POST.get('level')
-        if level_from_form:
-            level = int(level_from_form)
-        else:
-            level = 200 if intake == 'direct_entry' else 100
+        if intake not in dict(intake_choices):
+            form.add_error(None, 'Select a valid intake type.')
+
+        try:
+            level = int(request.POST.get('level') or (200 if intake == 'direct_entry' else 100))
+        except (TypeError, ValueError):
+            level = 0
+        if level not in {100, 200, 300, 400}:
+            form.add_error(None, 'Select a valid academic level.')
 
         programme_id = request.POST.get('programme')
-        academic_year = request.POST.get('academic_year', '2024/2025')
+        try:
+            programme = Programme.objects.get(pk=int(programme_id)) if programme_id else None
+        except (TypeError, ValueError, Programme.DoesNotExist):
+            programme = None
+        if not programme:
+            form.add_error(None, 'Select a valid programme.')
 
-        StudentProfile.objects.create(
-            user=user,
-            programme_id=programme_id if programme_id else None,
-            level=level,
-            academic_year=academic_year,
-        )
-        ActivityLog.objects.create(
-            user=user, action='signup',
-            description=f'New student registered — {intake} intake',
-            ip_address=request.META.get('REMOTE_ADDR'),
-        )
-        login(request, user)
-        messages.success(request, f'Welcome to KAAF University, {user.first_name}! 🎉')
-        return redirect('dashboard')
+        academic_year = request.POST.get('academic_year', '')
+        match = re.fullmatch(r'(20\d{2})/(20\d{2})', academic_year)
+        if not match or int(match.group(2)) != int(match.group(1)) + 1:
+            form.add_error(None, 'Enter a valid academic year, for example 2026/2027.')
 
-    # Group programmes by faculty for the dropdown
+        preferred_language = request.POST.get('preferred_language', 'English')
+        if preferred_language not in dict(User.LANGUAGE_CHOICES):
+            preferred_language = 'English'
+
+        if not form.errors:
+            d = form.cleaned_data
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    user_id=d['user_id'],
+                    email=d['email'],
+                    first_name=d['first_name'],
+                    last_name=d['last_name'],
+                    phone=d.get('phone', ''),
+                    role=User.STUDENT,
+                    is_active=False,
+                    password=d['password'],
+                    preferred_language=preferred_language,
+                )
+                StudentProfile.objects.create(
+                    user=user,
+                    programme=programme,
+                    level=level,
+                    academic_year=academic_year,
+                )
+                ActivityLog.objects.create(
+                    user=user,
+                    action='signup',
+                    description=f'New student registration pending verification — {intake} intake',
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                )
+            messages.info(
+                request,
+                'Your registration has been received. An administrator must verify your student identity before your account is activated.',
+            )
+            return redirect('login')
+
     from collections import defaultdict
     grouped_programmes = defaultdict(list)
-    for p in programmes:
-        grouped_programmes[p.department.faculty].append(p)
+    for programme in programmes:
+        grouped_programmes[programme.department.faculty].append(programme)
 
     return render(request, 'accounts/signup.html', {
         'form': form,
         'grouped_programmes': dict(grouped_programmes),
-        'intake_choices': INTAKE_CHOICES,
-        'current_year': '2024/2025',
-        'academic_years': ['2024/2025', '2025/2026', '2023/2024'],
+        'intake_choices': intake_choices,
+        'current_year': '2026/2027',
+        'academic_years': ['2026/2027', '2025/2026', '2024/2025'],
     })
 
-
+@require_POST
 def logout_view(request):
     """Handle logout"""
     if request.user.is_authenticated:
@@ -323,7 +293,7 @@ def profile_view(request):
 @login_required
 def change_password_view(request):
     """Change user password"""
-    form = ChangePasswordForm(request.POST or None)
+    form = ChangePasswordForm(request.POST or None, user=request.user)
     if request.method == 'POST' and form.is_valid():
         user = request.user
         if not user.check_password(form.cleaned_data['old_password']):

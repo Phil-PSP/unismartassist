@@ -7,15 +7,27 @@ from .nlp_engine import ChatbotEngine
 
 class ChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_scope = 'chat'
+    MAX_MESSAGE_LENGTH = 4000
 
     def post(self, request):
-        message = request.data.get('message', '').strip()
+        message = request.data.get('message', '')
         session_id = request.data.get('session_id')
+        if not isinstance(message, str):
+            return Response({'error': 'Message must be text.'}, status=400)
+        message = message.strip()
         if not message:
             return Response({'error': 'Message required'}, status=400)
+        if len(message) > self.MAX_MESSAGE_LENGTH:
+            return Response({'error': 'Message is too long.'}, status=413)
 
+        if session_id and not isinstance(session_id, str):
+            return Response({'error': 'Invalid session ID.'}, status=400)
         if session_id:
-            session = ChatSession.objects.filter(id=session_id, user=request.user).first()
+            try:
+                session = ChatSession.objects.filter(id=session_id, user=request.user).first()
+            except (TypeError, ValueError):
+                return Response({'error': 'Invalid session ID.'}, status=400)
         else:
             session = ChatSession.objects.filter(user=request.user, is_active=True).first()
         if not session:
@@ -46,9 +58,12 @@ class ChatHistoryAPIView(APIView):
     def get(self, request):
         session_id = request.query_params.get('session_id')
         if session_id:
-            messages = ChatMessage.objects.filter(
-                session_id=session_id, session__user=request.user
-            ).order_by('timestamp')
+            try:
+                messages = ChatMessage.objects.filter(
+                    session_id=session_id, session__user=request.user
+                ).order_by('timestamp')
+            except (TypeError, ValueError):
+                return Response({'error': 'Invalid session ID.'}, status=400)
         else:
             session = ChatSession.objects.filter(user=request.user, is_active=True).first()
             messages = ChatMessage.objects.filter(session=session).order_by('timestamp') if session else []

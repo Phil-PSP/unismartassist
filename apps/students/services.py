@@ -2,7 +2,7 @@
 Student services - GPA analysis, document processing
 """
 import pdfplumber
-import PyPDF2
+from pypdf import PdfReader
 from .models import Result, GPARecord
 
 
@@ -84,7 +84,7 @@ class DocumentProcessor:
         except Exception:
             try:
                 with open(self.document.file.path, 'rb') as f:
-                    reader = PyPDF2.PdfReader(f)
+                    reader = PdfReader(f)
                     for page in reader.pages:
                         text += page.extract_text() or ''
             except Exception as e:

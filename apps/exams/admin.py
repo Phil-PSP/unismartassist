@@ -4,19 +4,10 @@ from .models import (
     ExamAttempt, Answer, PastQuestionFile
 )
 
-# Debug: Print when admin module is loaded
-print("=" * 60)
-print("🔧 LOADING EXAMS ADMIN MODULE")
-print("=" * 60)
-
-
 @admin.register(ExamCategory)
 class ExamCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'created_at']
     search_fields = ['name']
-
-
-print("✅ Registered: ExamCategory")
 
 class QuestionOptionInline(admin.TabularInline):
     model = QuestionOption
@@ -33,8 +24,8 @@ class QuestionInline(admin.StackedInline):
 
 @admin.register(Exam)
 class ExamAdmin(admin.ModelAdmin):
-    list_display = ['title', 'course', 'exam_type', 'total_marks', 'duration_minutes', 'is_published', 'created_at']
-    list_filter = ['exam_type', 'is_published', 'is_active', 'difficulty', 'course__department']
+    list_display = ['title', 'course', 'exam_type', 'total_marks', 'duration_minutes', 'is_published', 'results_released', 'created_at']
+    list_filter = ['exam_type', 'is_published', 'is_active', 'results_released', 'difficulty', 'course__department']
     search_fields = ['title', 'course__name', 'course__code']
     inlines = [QuestionInline]
     readonly_fields = ['id', 'created_at', 'updated_at']
@@ -50,7 +41,7 @@ class ExamAdmin(admin.ModelAdmin):
             'fields': ('total_marks', 'pass_mark')
         }),
         ('Settings', {
-            'fields': ('shuffle_questions', 'shuffle_options', 'show_results_immediately', 'allow_review', 'max_attempts')
+            'fields': ('shuffle_questions', 'shuffle_options', 'show_results_immediately', 'results_released', 'allow_review', 'max_attempts')
         }),
         ('Past Question Info', {
             'fields': ('academic_year', 'semester'),
@@ -64,9 +55,6 @@ class ExamAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-
-
-print("✅ Registered: Exam")
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
@@ -117,12 +105,3 @@ class PastQuestionFileAdmin(admin.ModelAdmin):
     list_filter = ['academic_year', 'semester', 'exam_type', 'file_type', 'is_active']
     search_fields = ['title', 'course__name', 'course__code']
     readonly_fields = ['id', 'uploaded_at', 'downloads']
-
-
-print("✅ Registered: Question")
-print("✅ Registered: ExamAttempt")
-print("✅ Registered: Answer")
-print("✅ Registered: PastQuestionFile")
-print("=" * 60)
-print("🎉 ALL EXAMS ADMIN MODELS REGISTERED!")
-print("=" * 60)

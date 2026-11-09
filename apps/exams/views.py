@@ -4,11 +4,17 @@ Examination System Views
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.views.decorators.http import require_POST
+from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 from django.db.models import Q, Count, Avg
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from .models import Exam, ExamAttempt, Answer, Question, PastQuestionFile, ExamCategory
 import random
+from datetime import timedelta
+from pathlib import Path
+from django.utils.text import slugify
 
 
 @login_required
@@ -19,7 +25,11 @@ def exam_list(request):
         return redirect('dashboard')
     
     # Get student's registered courses
-    student_profile = request.user.student_profile
+    try:
+        student_profile = request.user.student_profile
+    except Exception:
+        messages.error(request, 'Your student profile is not available. Contact the administrator.')
+        return redirect('dashboard')
     registered_courses = student_profile.registrations.filter(
         is_active=True
     ).values_list('course_id', flat=True)
@@ -58,8 +68,16 @@ def exam_list(request):
 
 @login_required
 def exam_detail(request, exam_id):
-    """Show exam details and allow student to start"""
-    exam = get_object_or_404(Exam, id=exam_id, is_published=True)
+    """Show exam details and allow an eligible student to start."""
+    if request.user.role != 'student':
+        messages.error(request, 'Only students can access examinations.')
+        return redirect('dashboard')
+    try:
+        student_profile = request.user.student_profile
+    except Exception:
+        messages.error(request, 'Your student profile is not available. Contact the administrator.')
+        return redirect('dashboard')
+    exam = get_object_or_404(Exam, id=exam_id, is_published=True, is_active=True)
     
     # Check if student is registered for this course (skip for AI-generated exams)
     if request.user.role == 'student':
@@ -67,7 +85,7 @@ def exam_detail(request, exam_id):
         is_ai_exam = exam.category and exam.category.name == "AI Generated"
         
         if not is_ai_exam:
-            is_registered = request.user.student_profile.registrations.filter(
+            is_registered = student_profile.registrations.filter(
                 course=exam.course, is_active=True
             ).exists()
             
@@ -89,39 +107,58 @@ def exam_detail(request, exam_id):
         'exam': exam,
         'attempts': attempts,
         'can_attempt': can_attempt,
+        'results_visible': exam.show_results_immediately or exam.results_released,
         'attempts_left': exam.max_attempts - attempts.count(),
     }
     return render(request, 'exams/exam_detail.html', context)
 
 
 @login_required
+@require_POST
 def start_exam(request, exam_id):
-    """Start a new exam attempt"""
-    exam = get_object_or_404(Exam, id=exam_id, is_published=True)
-    
-    if not exam.is_available:
-        messages.error(request, "This exam is not currently available.")
-        return redirect('exams:exam_detail', exam_id=exam_id)
-    
-    # Check attempts
-    attempts_count = ExamAttempt.objects.filter(
-        exam=exam, student=request.user
-    ).count()
-    
-    if attempts_count >= exam.max_attempts:
-        messages.error(request, "You have reached the maximum number of attempts.")
-        return redirect('exams:exam_detail', exam_id=exam_id)
-    
-    # Create new attempt
-    attempt = ExamAttempt.objects.create(
-        exam=exam,
-        student=request.user,
-        attempt_number=attempts_count + 1,
-        status='in_progress'
-    )
-    
-    return redirect('exams:take_exam', attempt_id=attempt.id)
+    """Start an exam only for an eligible student, with serialized attempt counting."""
+    if request.user.role != 'student':
+        messages.error(request, 'Only students can start examinations.')
+        return redirect('dashboard')
+    try:
+        student_profile = request.user.student_profile
+    except Exception:
+        messages.error(request, 'Your student profile is not available. Contact the administrator.')
+        return redirect('dashboard')
 
+    with transaction.atomic():
+        exam = get_object_or_404(
+            Exam.objects.select_for_update(),
+            id=exam_id,
+            is_published=True,
+            is_active=True,
+        )
+        is_ai_exam = bool(exam.category and exam.category.name == 'AI Generated')
+        if not is_ai_exam and not student_profile.registrations.filter(
+            course=exam.course, is_active=True
+        ).exists():
+            messages.error(request, 'You are not registered for this course.')
+            return redirect('exams:exam_list')
+
+        if not exam.is_available:
+            messages.error(request, 'This exam is not currently available.')
+            return redirect('exams:exam_detail', exam_id=exam_id)
+
+        attempts_count = ExamAttempt.objects.filter(
+            exam=exam, student=request.user
+        ).count()
+        if attempts_count >= exam.max_attempts:
+            messages.error(request, 'You have reached the maximum number of attempts.')
+            return redirect('exams:exam_detail', exam_id=exam_id)
+
+        attempt = ExamAttempt.objects.create(
+            exam=exam,
+            student=request.user,
+            attempt_number=attempts_count + 1,
+            status='in_progress',
+        )
+
+    return redirect('exams:take_exam', attempt_id=attempt.id)
 
 @login_required
 def take_exam(request, attempt_id):
@@ -135,10 +172,16 @@ def take_exam(request, attempt_id):
     # Check if time expired
     time_elapsed = (timezone.now() - attempt.started_at).total_seconds() / 60
     if time_elapsed > exam.duration_minutes:
+        attempt.time_taken_minutes = exam.duration_minutes
+        attempt.submitted_at = timezone.now()
+        for answer in attempt.answers.all():
+            if answer.question.question_type in ['multiple_choice', 'true_false', 'fill_blank']:
+                answer.check_answer()
+        attempt.calculate_score()
         attempt.status = 'expired'
-        attempt.save()
-        messages.warning(request, "Time expired! Your exam has been auto-submitted.")
-        return redirect('exams:submit_exam', attempt_id=attempt.id)
+        attempt.save(update_fields=['time_taken_minutes', 'submitted_at', 'status'])
+        messages.warning(request, 'Time expired. Your exam has been automatically submitted.')
+        return redirect('exams:exam_result', attempt_id=attempt.id)
     
     # Get questions
     questions = exam.questions.prefetch_related('options').all()
@@ -174,6 +217,9 @@ def save_answer(request, attempt_id):
     option_id = request.POST.get('option_id')
     answer_text = request.POST.get('answer_text', '')
     
+    if timezone.now() > attempt.started_at + timedelta(minutes=attempt.exam.duration_minutes):
+        return JsonResponse({'error': 'Exam time has expired.'}, status=403)
+
     question = get_object_or_404(Question, id=question_id, exam=attempt.exam)
     
     # Create or update answer
@@ -197,36 +243,39 @@ def save_answer(request, attempt_id):
 
 
 @login_required
+@require_POST
 def submit_exam(request, attempt_id):
     """Submit the exam"""
-    attempt = get_object_or_404(ExamAttempt, id=attempt_id, student=request.user)
-    
-    if attempt.status != 'in_progress':
-        messages.info(request, "This exam has already been submitted.")
-        return redirect('exams:exam_result', attempt_id=attempt.id)
-    
-    # Calculate time taken
-    time_taken = (timezone.now() - attempt.started_at).total_seconds() / 60
-    attempt.time_taken_minutes = int(time_taken)
-    attempt.submitted_at = timezone.now()
-    attempt.status = 'submitted'
-    
-    # Auto-grade multiple choice, true/false, and fill_blank questions
-    for answer in attempt.answers.all():
-        if answer.question.question_type in ['multiple_choice', 'true_false', 'fill_blank']:
-            answer.check_answer()
-    
-    # Calculate score
-    attempt.calculate_score()
-    attempt.status = 'graded'
-    attempt.save()
+    with transaction.atomic():
+        attempt = get_object_or_404(
+            ExamAttempt.objects.select_for_update(),
+            id=attempt_id,
+            student=request.user,
+        )
+        if attempt.status != 'in_progress':
+            messages.info(request, 'This exam has already been submitted.')
+            return redirect('exams:exam_result', attempt_id=attempt.id)
+
+        time_taken = (timezone.now() - attempt.started_at).total_seconds() / 60
+        attempt.time_taken_minutes = min(int(time_taken), attempt.exam.duration_minutes)
+        attempt.submitted_at = timezone.now()
+        attempt.status = 'submitted'
+        attempt.save(update_fields=['time_taken_minutes', 'submitted_at', 'status'])
+
+        for answer in attempt.answers.select_related('question', 'selected_option'):
+            if answer.question.question_type in ['multiple_choice', 'true_false', 'fill_blank']:
+                answer.check_answer()
+
+        attempt.calculate_score()
+        attempt.status = 'graded'
+        attempt.save(update_fields=['status'])
     
     messages.success(request, "Exam submitted successfully!")
     
     if attempt.exam.show_results_immediately:
         return redirect('exams:exam_result', attempt_id=attempt.id)
     else:
-        messages.info(request, "Your results will be available after grading.")
+        messages.info(request, 'Your results will be available once academic staff release them.')
         return redirect('exams:exam_list')
 
 
@@ -236,9 +285,12 @@ def exam_result(request, attempt_id):
     attempt = get_object_or_404(ExamAttempt, id=attempt_id, student=request.user)
     
     if attempt.status == 'in_progress':
-        messages.warning(request, "Please submit the exam first.")
+        messages.warning(request, 'Please submit the exam first.')
         return redirect('exams:take_exam', attempt_id=attempt.id)
-    
+    if not attempt.exam.show_results_immediately and not attempt.exam.results_released:
+        messages.info(request, 'Your result has not been released yet.')
+        return redirect('exams:exam_detail', exam_id=attempt.exam_id)
+
     # Get answers with questions
     answers = attempt.answers.select_related(
         'question', 'selected_option'
@@ -255,37 +307,38 @@ def exam_result(request, attempt_id):
 
 @login_required
 def past_questions_list(request):
-    """List all past question papers"""
+    """List past-question files only for courses the user may access."""
     course_filter = request.GET.get('course')
     year_filter = request.GET.get('year')
-    
-    past_questions = PastQuestionFile.objects.filter(
-        is_active=True
-    ).select_related('course')
-    
+    from apps.students.models import Course
+
+    past_questions = PastQuestionFile.objects.filter(is_active=True).select_related('course')
+
+    if request.user.role == 'student':
+        try:
+            student_profile = request.user.student_profile
+        except Exception:
+            return HttpResponse('Student profile not found.', status=403)
+        registered_course_ids = student_profile.registrations.filter(
+            is_active=True
+        ).values_list('course_id', flat=True)
+        courses = Course.objects.filter(id__in=registered_course_ids)
+        past_questions = past_questions.filter(course_id__in=registered_course_ids)
+    elif request.user.role in ['admin', 'staff']:
+        courses = Course.objects.all()
+    else:
+        return HttpResponse('Access denied.', status=403)
+
     if course_filter:
         past_questions = past_questions.filter(course_id=course_filter)
     if year_filter:
         past_questions = past_questions.filter(academic_year=year_filter)
-    
-    # Get unique years and courses for filters
-    years = PastQuestionFile.objects.values_list('academic_year', flat=True).distinct()
-    
-    if request.user.role == 'student':
-        # Get student's courses
-        from apps.students.models import Course
-        try:
-            student_profile = request.user.student_profile
-            courses = Course.objects.filter(
-                courseregistration__student=student_profile,
-                courseregistration__is_active=True
-            ).distinct()
-        except:
-            courses = Course.objects.none()
-    else:
-        from apps.students.models import Course
-        courses = Course.objects.all()
-    
+
+    years = PastQuestionFile.objects.filter(
+        is_active=True,
+        course__in=courses,
+    ).values_list('academic_year', flat=True).distinct()
+
     context = {
         'past_questions': past_questions,
         'years': sorted(years, reverse=True),
@@ -293,20 +346,32 @@ def past_questions_list(request):
     }
     return render(request, 'exams/past_questions_list.html', context)
 
-
 @login_required
 def download_past_question(request, file_id):
-    """Download a past question file"""
+    """Authorize access before streaming a past-question file."""
     past_question = get_object_or_404(PastQuestionFile, id=file_id, is_active=True)
-    
-    # Increment download count
-    past_question.downloads += 1
-    past_question.save()
-    
-    # Serve file
-    response = HttpResponse(past_question.file, content_type='application/octet-stream')
-    response['Content-Disposition'] = f'attachment; filename="{past_question.title}.{past_question.file_type}"'
-    return response
+    if request.user.role == 'student':
+        try:
+            allowed = request.user.student_profile.registrations.filter(
+                course=past_question.course,
+                is_active=True,
+            ).exists()
+        except Exception:
+            allowed = False
+        if not allowed:
+            return HttpResponse('You are not registered for this course.', status=403)
+    elif request.user.role not in ['admin', 'staff']:
+        return HttpResponse('Access denied.', status=403)
+
+    PastQuestionFile.objects.filter(pk=past_question.pk).update(downloads=F('downloads') + 1)
+    suffix = Path(past_question.file.name).suffix.lower()
+    safe_name = f"{slugify(past_question.title) or 'past-question'}{suffix}"
+    return FileResponse(
+        past_question.file.open('rb'),
+        as_attachment=True,
+        filename=safe_name,
+        content_type='application/octet-stream',
+    )
 
 
 # Admin views

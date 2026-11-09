@@ -1,6 +1,9 @@
 """Authentication forms"""
 from django import forms
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from PIL import Image
 from .models import User
 
 
@@ -23,6 +26,23 @@ class LoginForm(forms.Form):
 
 
 class UserProfileForm(forms.ModelForm):
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get('avatar')
+        if not avatar:
+            return avatar
+        if avatar.size > 5 * 1024 * 1024:
+            raise forms.ValidationError('Profile image must not exceed 5 MB.')
+        try:
+            image = Image.open(avatar)
+            if image.format not in {'JPEG', 'PNG', 'GIF', 'WEBP'}:
+                raise forms.ValidationError('Upload a JPG, PNG, GIF or WEBP image.')
+            image.verify()
+        except (OSError, ValueError):
+            raise forms.ValidationError('The uploaded profile image is invalid.')
+        finally:
+            avatar.seek(0)
+        return avatar
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'personal_email', 'phone', 'avatar', 'preferred_language']
@@ -66,12 +86,19 @@ class SignupForm(forms.Form):
         cpw = cleaned.get('confirm_password')
         if pw and cpw and pw != cpw:
             raise forms.ValidationError('Passwords do not match.')
-        if pw and len(pw) < 6:
-            raise forms.ValidationError('Password must be at least 6 characters.')
+        if pw:
+            try:
+                validate_password(pw)
+            except ValidationError as exc:
+                self.add_error('password', exc)
         return cleaned
 
 
 class ChangePasswordForm(forms.Form):
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
     old_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-input'}))
     new_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-input'}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-input'}))
@@ -82,4 +109,9 @@ class ChangePasswordForm(forms.Form):
         confirm = cleaned.get('confirm_password')
         if new and confirm and new != confirm:
             raise forms.ValidationError('New passwords do not match.')
+        if new:
+            try:
+                validate_password(new, user=self.user)
+            except ValidationError as exc:
+                self.add_error('new_password', exc)
         return cleaned
