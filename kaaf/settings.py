@@ -16,15 +16,15 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 if DEBUG and not config('DJANGO_ALLOW_INSECURE_DEBUG', default=False, cast=bool):
     raise RuntimeError('DEBUG=True requires DJANGO_ALLOW_INSECURE_DEBUG=True; never enable this in production.')
 
-# Allow Railway's auto-generated domain + any custom domains
+# Platform hostname + explicitly configured custom domains
 _allowed = config('ALLOWED_HOSTS', default='localhost,127.0.0.1')
 ALLOWED_HOSTS = [host.strip() for host in _allowed.split(',') if host.strip()]
 if not DEBUG and '*' in ALLOWED_HOSTS:
     raise RuntimeError('Wildcard ALLOWED_HOSTS is not permitted when DEBUG=False.')
-# Railway injects RAILWAY_PUBLIC_DOMAIN automatically
-_railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
-if _railway_domain and _railway_domain not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(_railway_domain)
+# Render injects RENDER_EXTERNAL_HOSTNAME for web services.
+_render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
+if _render_hostname and _render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_render_hostname)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -250,8 +250,8 @@ _cors_origins = config('CORS_ALLOWED_ORIGINS', default='http://localhost:8000,ht
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(',') if origin.strip()]
 _csrf_origins = config('CSRF_TRUSTED_ORIGINS', default='')
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_origins.split(',') if origin.strip()]
-if _railway_domain:
-    production_origin = f'https://{_railway_domain}'
+if _render_hostname:
+    production_origin = f'https://{_render_hostname}'
     if production_origin not in CORS_ALLOWED_ORIGINS:
         CORS_ALLOWED_ORIGINS.append(production_origin)
     if production_origin not in CSRF_TRUSTED_ORIGINS:
